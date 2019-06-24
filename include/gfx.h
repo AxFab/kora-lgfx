@@ -22,6 +22,7 @@ struct gfx {
     int height;
     int pitch;
     long fd;
+    long fi;
     union {
         uint8_t *pixels;
         uint32_t *pixels4;

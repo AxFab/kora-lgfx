@@ -55,7 +55,8 @@ void gfx_rect(gfx_t *gfx, int x, int y, int w, int h, uint32_t color)
     int maxx = MIN(gfx->width, x + w);
     int miny = MAX(0, y);
     int maxy = MIN(gfx->height, y + h);
-
+    if (minx >= maxx)
+        return;
     for (j = miny; j < maxy; ++j)
         memset32(&gfx->pixels[j * gfx->pitch + minx * 4], color, (maxx - minx) * 4);
 }
@@ -63,6 +64,7 @@ void gfx_rect(gfx_t *gfx, int x, int y, int w, int h, uint32_t color)
 
 void gfx_clear(gfx_t *gfx, uint32_t color)
 {
+    (void)gfx->fi;
     memset32(gfx->pixels, color, gfx->pitch * gfx->height);
 }
 

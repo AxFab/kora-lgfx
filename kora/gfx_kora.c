@@ -44,6 +44,7 @@ void gfx_destroy(gfx_t *gfx)
 
 int gfx_map(gfx_t *gfx)
 {
+    (void)gfx->fi;
     if (gfx->pixels != NULL)
         return 0;
     gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
@@ -65,7 +66,7 @@ void gfx_flip(gfx_t *gfx)
 {
     if (gfx->pixels == NULL)
         return;
-    fcntl(gfx->fd, 17/* FD_WFLIP */);
+    fcntl(gfx->fd, 800/* FD_WFLIP */);
 }
 
 int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)
@@ -82,7 +83,7 @@ int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)
     handlers->expose(gfx, arg, &seat);
     gfx_flip(gfx);
     for (;;) {
-        if (read(gfx->fd, (char*)&msg, sizeof(msg)) < sizeof(msg))
+        if (read(gfx->fi, (char*)&msg, sizeof(msg)) < sizeof(msg))
             continue;
         switch (msg.message) {
         case EV_QUIT:
