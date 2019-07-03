@@ -87,11 +87,15 @@ static void gfx_parse_key(int fd, char *buf)
 
 static void gfx_read_events(int *fds)
 {
+    int cn, idx = 0;
+    char buf[16] = { 0 };
     for (;;) {
-        char buf[16];
-	int cn, idx = 0;
-	if (idx < 16)
-            cn = read(fds[1], &buf[idx], 16 - idx);
+        int cap = 16;
+	if (idx < cap)
+            cn = read(fds[1], &buf[idx], cap - idx);
+	cap = idx + cn;
+	if (cap == 0)
+	    break;
 	char *n = strchr(buf, '\n');
 	if (n == NULL)
 	    exit(-5);
@@ -99,16 +103,16 @@ static void gfx_read_events(int *fds)
 
 	if (strncmp(buf, "KEY ", 4) == 0) {
 	    gfx_parse_key(fds[0], &buf[4]);
-	} else if (strncmp(buf, "QUIT", 4) == 0 || strcmp(buf, "q") == 2) {
+	} else if (strncmp(buf, "QUIT", 4) == 0 || strcmp(buf, "q") == 0) {
 	    gfx_post(fds[0], EV_QUIT, 0, 0);
-	} else if (strncmp(buf, "TIMER", 5) == 0 || strcmp(buf, "t") == 2) {
+	} else if (strncmp(buf, "TIMER", 5) == 0 || strcmp(buf, "t") == 0) {
 	    gfx_post(fds[0], EV_TIMER, 0, 0);
 	} else if (strncmp(buf, "DELAY", 5) == 0) {
 	    gfx_post(fds[0], EV_DELAY, 500000, 0);
 	}
 	idx = (++n) - buf;
-	memmove(buf, n, 16 - idx);
-	idx = 16 - idx;
+	memmove(buf, n, cap - idx);
+	idx = cap - idx;
     }
 }
 
@@ -123,7 +127,7 @@ gfx_t *gfx_create_window(void *ctx, int width, int height, int flag)
 
     int p2[2];
     int *p3 = malloc(2 * sizeof(int));
-    pipe(2);
+    pipe(p2);
     p3[0] = p2[1];
     p3[1] = pipe_name == NULL ? 0 : open(pipe_name, O_RDONLY);
     gfx->fi = p2[0];
