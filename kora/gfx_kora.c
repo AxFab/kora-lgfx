@@ -49,6 +49,7 @@ int gfx_map(gfx_t *gfx)
         return 0;
     gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
     gfx->pixels = mmap(NULL, 16 * _Mib_, 0x10002, 0, gfx->fd, 0);
+    gfx->backup = ADDR_OFF(gfx->pixels, gfx->pitch * gfx->height);
     return 0;
 }
 
@@ -58,6 +59,7 @@ int gfx_unmap(gfx_t *gfx)
         return 0;
     munmap(gfx->pixels, 16 * _Mib_);
     gfx->pixels = NULL;
+    gfx->backup = NULL;
     return 0;
 }
 
@@ -66,7 +68,10 @@ void gfx_flip(gfx_t *gfx)
 {
     if (gfx->pixels == NULL)
         return;
-    fcntl(gfx->fd, 800/* FD_WFLIP */);
+    fcntl(gfx->fd, 800/* FD_WFLIP */, 5, gfx->pixels, gfx->backup);
+    uint8_t *tmp = gfx->backup;
+    gfx->backup = gfx->pixels;
+    gfx->pixels = tmp;
 }
 
 int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)

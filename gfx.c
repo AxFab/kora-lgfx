@@ -55,6 +55,7 @@ void gfx_rect(gfx_t *gfx, int x, int y, int w, int h, uint32_t color)
     int maxx = MIN(gfx->width, x + w);
     int miny = MAX(0, y);
     int maxy = MIN(gfx->height, y + h);
+    (void)gfx->backup;
     if (minx >= maxx)
         return;
     for (j = miny; j < maxy; ++j)

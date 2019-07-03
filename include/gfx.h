@@ -27,6 +27,7 @@ struct gfx {
         uint8_t *pixels;
         uint32_t *pixels4;
     };
+    uint8_t *backup;
 };
 
 struct gfx_seat {
