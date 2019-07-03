@@ -31,6 +31,8 @@ SRCS-y += $(wildcard $(srcdir)/$(DISTO)/*.c)
 
 OBJS-y = $(patsubst $(srcdir)/%.c,$(outdir)/%.o,$(SRCS-y))
 
+CFLAGS ?= -Wall -Wextra
+CFLAGS += -fPIC
 CFLAGS += -I $(topdir)/include
 CFLAGS += -I $(topdir)/$(DISTO)
 CFLAGS +=  -ggdb
