@@ -5,6 +5,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
+#include <threads.h>
 
 void clipboard_copy(const char *buf, int len)
 {
@@ -18,20 +19,117 @@ int clipboard_paste(char *buf, int len)
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-const char *pipe_name = "win.in";
+const char *pipe_name = NULL;
+
+static void gfx_post(int fd, int no, uint32_t param1, uint32_t param2)
+{
+    gfx_msg_t msg;
+    msg.window = 0;
+    msg.message = no;
+    msg.param1 = param1;
+    msg.param2 = param2;
+    write(fd, &msg, sizeof(msg));
+    printf(" - [%d, %x, %x]\n", no, param1, param2);
+}
+
+uint8_t rev[] = {
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0x1c, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0x39, 0, 0, 0, 0, 0, 0, 0, // 0x20
+    0, 0, 0, 0, 0x33, 0x0c, 0x34, 0x35,
+    0x0b, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, // 0x30
+    0x09, 0x0a, 0, 0x27, 0, 0x0d, 0, 0,
+    0, 0x1e, 0x30, 0x2e, 0x20, 0x12, 0x21, 0x22, // 0x40
+    0x23, 0x17, 0x24, 0x25, 0x26, 0x32, 0x31, 0x18,
+    0x19, 0x10, 0x13, 0x1f, 0x14, 0x16, 0x2f, 0x11, // 0x50
+    0x2d, 0x15, 0x2c, 0x1a, 0x56, 0x1b, 0, 0,
+    0x29, 0x1e, 0x30, 0x2e, 0x20, 0x12, 0x21, 0x22, // 0x60
+    0x23, 0x17, 0x24, 0x25, 0x26, 0x32, 0x31, 0x18,
+    0x19, 0x10, 0x13, 0x1f, 0x14, 0x16, 0x2f, 0x11, // 0x70
+    0x2d, 0x15, 0x2c, 0, 0, 0, 0, 0,
+
+};
+
+static void gfx_parse_key(int fd, char *buf)
+{
+    int lm = buf[1];
+    int md = buf[0];
+    int ch = buf[0];
+
+    if (lm == '+') {
+	if (md == 'C')
+	    gfx_post(fd, EV_KEYDOWN, 0x1d, 0);
+	else if (md == 'S')
+	    gfx_post(fd, EV_KEYDOWN, 0x2a, 0);
+	ch = buf[2];
+    } else if (lm == '!') {
+        if (md == 'e')
+	    ch = 0x10;
+	else
+	    ch = 0;
+    }
+
+    int key = rev[ch];
+    if (key != 0) {
+	gfx_post(fd, EV_KEYDOWN, key, 0);
+	gfx_post(fd, EV_KEYUP, key, 0);
+    }
+
+    if (lm == '+') {
+	if (md == 'C')
+	    gfx_post(fd, EV_KEYUP, 0x1d, 0);
+	else if (md == 'S')
+	    gfx_post(fd, EV_KEYUP, 0x2a, 0);
+    }
+}
+
+static void gfx_read_events(int *fds)
+{
+    for (;;) {
+        char buf[16];
+	int cn, idx = 0;
+	if (idx < 16)
+            cn = read(fds[1], &buf[idx], 16 - idx);
+	char *n = strchr(buf, '\n');
+	if (n == NULL)
+	    exit(-5);
+	*n = '\0';
+
+	if (strncmp(buf, "KEY ", 4) == 0) {
+	    gfx_parse_key(fds[0], &buf[4]);
+	} else if (strncmp(buf, "QUIT", 4) == 0 || strcmp(buf, "q") == 2) {
+	    gfx_post(fds[0], EV_QUIT, 0, 0);
+	} else if (strncmp(buf, "TIMER", 5) == 0 || strcmp(buf, "t") == 2) {
+	    gfx_post(fds[0], EV_TIMER, 0, 0);
+	} else if (strncmp(buf, "DELAY", 5) == 0) {
+	    gfx_post(fds[0], EV_DELAY, 500000, 0);
+	}
+	idx = (++n) - buf;
+	memmove(buf, n, 16 - idx);
+	idx = 16 - idx;
+    }
+}
+
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
 gfx_t *gfx_create_window(void *ctx, int width, int height, int flag)
 {
     gfx_t *gfx = calloc(sizeof(gfx_t), 1);
     gfx->width = width;
     gfx->height = height;
+    gfx->fd = 0;
 
-    gfx->fd = open(pipe_name, O_RDONLY);
-    if (gfx->fd == -1) {
-        free(gfx);
-        return NULL;
-    }
+    int p2[2];
+    int *p3 = malloc(2 * sizeof(int));
+    pipe(2);
+    p3[0] = p2[1];
+    p3[1] = pipe_name == NULL ? 0 : open(pipe_name, O_RDONLY);
+    gfx->fi = p2[0];
 
+    thrd_t thrd;
+    thrd_create(&thrd, (thrd_start_t)gfx_read_events, p3);
     return gfx;
 }
 
@@ -117,96 +215,12 @@ void gfx_flip(gfx_t *gfx)
     gfx_export_bmp24("win.bmp", gfx);
 }
 
-void gfx_parse_(const char *buf, gfx_msg_t *msg)
+int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
 {
-    msg->param1 = 0;
-    msg->message = 0;
-    if (strncmp(buf, "KEYD ", 5) == 0) {
-        msg->message = EV_KEYDOWN;
-        sscanf(buf, "KEYD %x", &msg->param1);
-    } else if (strncmp(buf, "KEYU ", 5) == 0) {
-        msg->message = EV_KEYUP;
-        sscanf(buf, "KEYU %x", &msg->param1);
-    } else if (strncmp(buf, "QUIT", 4) == 0) {
-        msg->message = EV_QUIT;
-    } else if (strncmp(buf, "TIMER", 5) == 0) {
-        msg->message = EV_TIMER;
-    } else if (strncmp(buf, "DELAY", 5) == 0) {
-        msg->message = EV_DELAY;
-    } else {
-        msg->message = -1;
-    } 
-}
-
-int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)
-{
-    int lx = 0, ly = 0, rx = 0, ry = 0;
-    int key = 0, key2 = 0;
-
-    gfx_seat_t seat;
-    gfx_msg_t msg;
-    char buf[16];
-    int cn, idx = 0;
-    memset(&seat, 0, sizeof(seat));
-    if (gfx->fd < 0)
-        return -1;
     for (;;) {
-        if (idx < 16)
-            cn = read(gfx->fd, &buf[idx], 16 - idx);
-        char *n = strchr(buf, '\n');
-        if (n == NULL)
-            exit(-5);
-        *n = '\0';
-        gfx_parse_(buf, &msg);
-        printf("-%s\n", buf);
-        idx = (++n) - buf;
-        memmove(buf, n, 16 - idx);
-        idx = 16 - idx;
-        switch (msg.message) {
-        case EV_QUIT:
-            return 0;
-        case EV_MOUSEMOVE:
-            seat.mouse_x = msg.param1 & 0x7fff;
-            seat.mouse_y = msg.param1 >> 16;
-            if (handlers->mse_move)
-                handlers->mse_move(gfx, arg, &seat);
-            break;
-        case EV_BUTTONDOWN:
-            seat.btn_status |= msg.param1;
-            if (handlers->mse_down)
-                handlers->mse_down(gfx, arg, &seat, msg.param1);
-            break;
-        case EV_BUTTONUP:
-            seat.btn_status &= ~msg.param1;
-            if (handlers->mse_up)
-                handlers->mse_up(gfx, arg, &seat, msg.param1);
-            break;
-        case EV_MOUSEWHEEL:
-            if (handlers->mse_wheel)
-                handlers->mse_wheel(gfx, arg, &seat, msg.param1);
-            break;
-        case EV_KEYDOWN:
-            if (handlers->key_down)
-                handlers->key_down(gfx, arg, &seat, msg.param1);
-            break;
-        case EV_KEYUP:
-            if (handlers->key_up)
-                handlers->key_up(gfx, arg, &seat, msg.param1);
-            break;
-        case EV_TIMER:
-            if (handlers->repaint == NULL || handlers->repaint(gfx, arg, &seat)) {
-                if (handlers->expose) {
-                    handlers->expose(gfx, arg, &seat);
-                    gfx_flip(gfx);
-                }
-            }
-            break;
-        case EV_DELAY:
-            usleep(500000);
-            break;
-        default:
-            break;
-        }
+        int by = read(gfx->fi, msg, sizeof(*msg));
+	if (by != 0)
+            return by == sizeof(*msg) ? 0 : -1;
     }
 }
 

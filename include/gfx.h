@@ -7,6 +7,7 @@
 #include <mcrs.h>
 
 #define _16x10(n)  ((n)/10*16)
+#define _16x9(n)  ((n)/9*16)
 
 #ifndef PACK
 #  ifndef _WIN32
@@ -20,6 +21,7 @@ typedef int uchar_t;
 typedef struct gfx gfx_t;
 typedef struct gfx_seat gfx_seat_t;
 typedef struct gfx_handlers gfx_handlers_t;
+typedef struct gfx_msg gfx_msg_t;
 typedef struct font_bmp font_bmp_t;
 
 struct gfx {
@@ -41,6 +43,13 @@ struct gfx_seat {
     int btn_status; // left, right, wheel, prev, next
     int kdb_status; // Shift, caps, ctrl, alt, home, num, defl !
 };
+
+PACK(struct gfx_msg {
+    uint16_t message;
+    uint16_t window;
+    uint32_t param1;
+    uint32_t param2;
+});
 
 struct font_bmp {
     const uint8_t *glyphs;
@@ -77,6 +86,9 @@ int gfx_map(gfx_t *gfx);
 int gfx_unmap(gfx_t *gfx);
 int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers);
 
+void gfx_flip(gfx_t *gfx);
+int gfx_poll(gfx_t *gfx, gfx_msg_t *msg);
+
 void clipboard_copy(const char *buf, int len);
 int clipboard_paste(char *buf, int len);
 
@@ -90,13 +102,6 @@ extern const font_bmp_t font_7x13;
 extern const font_bmp_t font_6x9;
 extern const font_bmp_t font_8x8;
 
-typedef struct gfx_msg {
-    int64_t timestamp;
-    int32_t param1;
-    int32_t param2;
-    uint16_t message;
-    uint16_t unsued;
-} gfx_msg_t;
 
 #define EV_QUIT  0
 #define EV_MOUSEMOVE  2
