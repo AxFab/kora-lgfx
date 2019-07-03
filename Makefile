@@ -24,7 +24,7 @@ include $(topdir)/make/global.mk
 
 all: $(libdir)/libgfx.so
 
-DISTO=kora
+DISTO ?= kora
 
 SRCS-y += $(wildcard $(srcdir)/*.c)
 SRCS-y += $(wildcard $(srcdir)/$(DISTO)/*.c)

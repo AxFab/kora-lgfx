@@ -119,14 +119,14 @@ void gfx_flip(gfx_t *gfx)
 
 void gfx_parse_(const char *buf, gfx_msg_t *msg)
 {
-    msg->param = 0;
+    msg->param1 = 0;
     msg->message = 0;
     if (strncmp(buf, "KEYD ", 5) == 0) {
         msg->message = EV_KEYDOWN;
-        sscanf(buf, "KEYD %x", &msg->param);
+        sscanf(buf, "KEYD %x", &msg->param1);
     } else if (strncmp(buf, "KEYU ", 5) == 0) {
         msg->message = EV_KEYUP;
-        sscanf(buf, "KEYU %x", &msg->param);
+        sscanf(buf, "KEYU %x", &msg->param1);
     } else if (strncmp(buf, "QUIT", 4) == 0) {
         msg->message = EV_QUIT;
     } else if (strncmp(buf, "TIMER", 5) == 0) {
@@ -166,32 +166,32 @@ int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)
         case EV_QUIT:
             return 0;
         case EV_MOUSEMOVE:
-            seat.mouse_x = msg.param & 0x7fff;
-            seat.mouse_y = msg.param >> 16;
+            seat.mouse_x = msg.param1 & 0x7fff;
+            seat.mouse_y = msg.param1 >> 16;
             if (handlers->mse_move)
                 handlers->mse_move(gfx, arg, &seat);
             break;
         case EV_BUTTONDOWN:
-            seat.btn_status |= msg.param;
+            seat.btn_status |= msg.param1;
             if (handlers->mse_down)
-                handlers->mse_down(gfx, arg, &seat, msg.param);
+                handlers->mse_down(gfx, arg, &seat, msg.param1);
             break;
         case EV_BUTTONUP:
-            seat.btn_status &= ~msg.param;
+            seat.btn_status &= ~msg.param1;
             if (handlers->mse_up)
-                handlers->mse_up(gfx, arg, &seat, msg.param);
+                handlers->mse_up(gfx, arg, &seat, msg.param1);
             break;
         case EV_MOUSEWHEEL:
             if (handlers->mse_wheel)
-                handlers->mse_wheel(gfx, arg, &seat, msg.param);
+                handlers->mse_wheel(gfx, arg, &seat, msg.param1);
             break;
         case EV_KEYDOWN:
             if (handlers->key_down)
-                handlers->key_down(gfx, arg, &seat, msg.param);
+                handlers->key_down(gfx, arg, &seat, msg.param1);
             break;
         case EV_KEYUP:
             if (handlers->key_up)
-                handlers->key_up(gfx, arg, &seat, msg.param);
+                handlers->key_up(gfx, arg, &seat, msg.param1);
             break;
         case EV_TIMER:
             if (handlers->repaint == NULL || handlers->repaint(gfx, arg, &seat)) {
