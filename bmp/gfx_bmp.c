@@ -59,29 +59,29 @@ static void gfx_parse_key(int fd, char *buf)
     int ch = buf[0];
 
     if (lm == '+') {
-	if (md == 'C')
-	    gfx_post(fd, EV_KEYDOWN, 0x1d, 0);
-	else if (md == 'S')
-	    gfx_post(fd, EV_KEYDOWN, 0x2a, 0);
-	ch = buf[2];
+        if (md == 'C')
+            gfx_post(fd, EV_KEYDOWN, 0x1d, 0);
+        else if (md == 'S')
+            gfx_post(fd, EV_KEYDOWN, 0x2a, 0);
+        ch = buf[2];
     } else if (lm == '!') {
         if (md == 'e')
-	    ch = 0x10;
-	else
-	    ch = 0;
+            ch = 0x10;
+        else
+            ch = 0;
     }
 
     int key = rev[ch];
     if (key != 0) {
-	gfx_post(fd, EV_KEYDOWN, key, 0);
-	gfx_post(fd, EV_KEYUP, key, 0);
+        gfx_post(fd, EV_KEYDOWN, key, 0);
+        gfx_post(fd, EV_KEYUP, key, 0);
     }
 
     if (lm == '+') {
-	if (md == 'C')
-	    gfx_post(fd, EV_KEYUP, 0x1d, 0);
-	else if (md == 'S')
-	    gfx_post(fd, EV_KEYUP, 0x2a, 0);
+        if (md == 'C')
+            gfx_post(fd, EV_KEYUP, 0x1d, 0);
+        else if (md == 'S')
+            gfx_post(fd, EV_KEYUP, 0x2a, 0);
     }
 }
 
@@ -91,29 +91,33 @@ static void gfx_read_events(int *fds)
     char buf[16] = { 0 };
     for (;;) {
         int cap = 16;
-	if (idx < cap)
+        if (idx < cap)
             cn = read(fds[1], &buf[idx], cap - idx);
-	cap = idx + cn;
-	if (cap == 0)
-	    break;
-	char *n = strchr(buf, '\n');
-	if (n == NULL)
-	    exit(-5);
-	*n = '\0';
+        cap = idx + cn;
+        if (cap == 0)
+            break;
+        char *n = strchr(buf, '\n');
+        if (n == NULL)
+            exit(-5);
+        *n = '\0';
 
-	if (strncmp(buf, "KEY ", 4) == 0) {
-	    gfx_parse_key(fds[0], &buf[4]);
-	} else if (strncmp(buf, "QUIT", 4) == 0 || strcmp(buf, "q") == 0) {
-	    gfx_post(fds[0], EV_QUIT, 0, 0);
-	} else if (strncmp(buf, "TIMER", 5) == 0 || strcmp(buf, "t") == 0) {
-	    gfx_post(fds[0], EV_TIMER, 0, 0);
-	} else if (strncmp(buf, "DELAY", 5) == 0) {
-	    gfx_post(fds[0], EV_DELAY, 500000, 0);
-	}
-	idx = (++n) - buf;
-	memmove(buf, n, cap - idx);
-	idx = cap - idx;
+        if (strncmp(buf, "KEY ", 4) == 0)
+            gfx_parse_key(fds[0], &buf[4]);
+        else if (strncmp(buf, "QUIT", 4) == 0 || strcmp(buf, "q") == 0)
+            gfx_post(fds[0], EV_QUIT, 0, 0);
+        else if (strncmp(buf, "TIMER", 5) == 0 || strcmp(buf, "t") == 0)
+            gfx_post(fds[0], EV_TIMER, 0, 0);
+        else if (strncmp(buf, "DELAY", 5) == 0)
+            gfx_post(fds[0], EV_DELAY, 500000, 0);
+        idx = (++n) - buf;
+        memmove(buf, n, cap - idx);
+        idx = cap - idx;
     }
+    close(fds[1]);
+    close(fds[0]);
+    free(fds);
+    thrd_detach(thrd_current());
+    thrd_exit(0);
 }
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
@@ -223,7 +227,7 @@ int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
 {
     for (;;) {
         int by = read(gfx->fi, msg, sizeof(*msg));
-	if (by != 0)
+        if (by != 0)
             return by == sizeof(*msg) ? 0 : -1;
     }
 }

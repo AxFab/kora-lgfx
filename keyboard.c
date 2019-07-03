@@ -223,7 +223,7 @@ int keyboard_down(int key, int *status, int *key2)
                 peek_key = 0;
                 return latin_alternate[i][j][s];
             }
-        } while(0);
+        } while (0);
 
         *key2 = peek_key;
         peek_key = 0;

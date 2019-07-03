@@ -162,9 +162,9 @@ int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)
             }
             break;
         case EV_RESIZE:
-	    gfx_unmap(gfx);
-	    gfx->width = msg.param1 >> 16;
-	    gfx->height = msg.param1 & 0xffff;
+            gfx_unmap(gfx);
+            gfx->width = msg.param1 >> 16;
+            gfx->height = msg.param1 & 0xffff;
             break;
         case EV_DELAY:
             usleep(msg.param1);

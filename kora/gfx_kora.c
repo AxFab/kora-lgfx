@@ -48,7 +48,7 @@ int gfx_map(gfx_t *gfx)
     if (gfx->pixels != NULL)
         return 0;
     gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
-    gfx->pixels = mmap(NULL, 16 * _Mib_, 0x10002, 0, gfx->fd, 0);
+    gfx->pixels = mmap(NULL, 8 * _Mib_, 0x10002, 0, gfx->fd, 0);
     gfx->backup = ADDR_OFF(gfx->pixels, gfx->pitch * gfx->height);
     return 0;
 }
@@ -57,7 +57,7 @@ int gfx_unmap(gfx_t *gfx)
 {
     if (gfx->pixels == NULL)
         return 0;
-    munmap(gfx->pixels, 16 * _Mib_);
+    munmap(MIN(gfx->pixels, gfx->backup), 8 * _Mib_);
     gfx->pixels = NULL;
     gfx->backup = NULL;
     return 0;
@@ -74,74 +74,11 @@ void gfx_flip(gfx_t *gfx)
     gfx->pixels = tmp;
 }
 
-int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)
+int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
 {
-    int lx = 0, ly = 0, rx = 0, ry = 0;
-    int key = 0, key2 = 0;
-
-    gfx_seat_t seat;
-    gfx_msg_t msg;
-    memset(&seat, 0, sizeof(seat));
-    if (gfx->fd < 0)
-        return -1;
-
-    handlers->expose(gfx, arg, &seat);
-    gfx_flip(gfx);
     for (;;) {
-        if (read(gfx->fi, (char*)&msg, sizeof(msg)) < sizeof(msg))
-            continue;
-        switch (msg.message) {
-        case EV_QUIT:
+        if (read(gfx->fi, (char *)msg, sizeof(*msg)) != 0)
             return 0;
-        case EV_MOUSEMOVE:
-            seat.mouse_x = msg.param1 & 0x7fff;
-            seat.mouse_y = msg.param1 >> 16;
-            if (handlers->mse_move)
-                handlers->mse_move(gfx, arg, &seat);
-            break;
-        case EV_BUTTONDOWN:
-            seat.btn_status |= msg.param1;
-            if (handlers->mse_down)
-                handlers->mse_down(gfx, arg, &seat, msg.param1);
-            break;
-        case EV_BUTTONUP:
-            seat.btn_status &= ~msg.param1;
-            if (handlers->mse_up)
-                handlers->mse_up(gfx, arg, &seat, msg.param1);
-            break;
-        case EV_MOUSEWHEEL:
-            if (handlers->mse_wheel)
-                handlers->mse_wheel(gfx, arg, &seat, msg.param1);
-            break;
-        case EV_KEYDOWN:
-            if (handlers->key_down)
-                handlers->key_down(gfx, arg, &seat, msg.param2);
-            break;
-        case EV_KEYUP:
-            if (handlers->key_up)
-                handlers->key_up(gfx, arg, &seat, msg.param2);
-            break;
-        case EV_RESIZE:
-            // gfx_unmap(gfx);
-            gfx->width = msg.param1;
-            gfx->height = msg.param2;
-            gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
-            break;
-        case EV_TIMER:
-            if (handlers->repaint == NULL || handlers->repaint(gfx, arg, &seat)) {
-                if (handlers->expose) {
-                    handlers->expose(gfx, arg, &seat);
-                    gfx_flip(gfx);
-                }
-            }
-            break;
-        default:
-            break;
-        }
     }
 }
-
-
-
-
 
