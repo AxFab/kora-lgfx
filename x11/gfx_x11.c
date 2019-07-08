@@ -14,7 +14,7 @@ int clipboard_paste(char *buf, int len)
     return 0;
 }
 
-int __exec(char *name, int argc, char **argv, int fds[3])
+int __exec(char *name, const char **argv, const char **env, int fds[3])
 {
     int i;
     char cmdline[4096];

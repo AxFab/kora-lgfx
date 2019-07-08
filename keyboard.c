@@ -186,7 +186,7 @@ int keyboard_down(int key, int *status, int *key2)
 {
     *key2 = 0;
     if (key >= 128) {
-        printf("KEY %d\n", key);
+        // printf("KEY %d\n", key);
         return 0;
     }
 
@@ -230,7 +230,7 @@ int keyboard_down(int key, int *status, int *key2)
         return ch;
     }
 
-    printf("Key %02x.%d => %04x\n", key, s, kdb_layout_US_international[key][s]);
+    // printf("Key %02x.%d => %04x\n", key, s, kdb_layout_US_international[key][s]);
     key = kdb_layout_US_international[key][s];
     if (key < 0) {
         peek_key = -key;
