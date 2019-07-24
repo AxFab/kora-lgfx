@@ -1,5 +1,5 @@
 #include <stddef.h>
-#include <gfx.h>
+#include <kora/gfx.h>
 
 int uclen(const char *str, size_t lg)
 {

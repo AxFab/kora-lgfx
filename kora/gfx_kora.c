@@ -1,4 +1,4 @@
-#include <gfx.h>
+#include <kora/gfx.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>

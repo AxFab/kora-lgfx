@@ -4,7 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <mcrs.h>
+#include <kora/mcrs.h>
+#include <kora/keys.h>
 
 #define _16x10(n)  ((n)/10*16)
 #define _16x9(n)  ((n)/9*16)
@@ -115,44 +116,5 @@ extern const font_bmp_t font_8x8;
 #define EV_RESIZE 10
 
 
-#define KEY_SHIFT_L  1
-#define KEY_SHIFT_R  2
-#define KEY_CAPS_LOCK  3
-#define KEY_ALT_L  4
-#define KEY_ALT_R  5
-#define KEY_CTRL_L  6
-#define KEY_CTRL_R  7
-#define KEY_NUM_LOCK  8
-
-#define KEY_RIGHT -4
-#define KEY_LEFT -4
-#define KEY_UP -4
-#define KEY_DOWN -4
-#define KEY_PAGE_UP -4
-#define KEY_PAGE_DOWN -3
-#define KEY_INSERT -2
-#define KEY_DELETE -1
-#define KEY_BREAK -1
-#define KEY_END -1
-#define KEY_HOME -1
-
-#define KEY_F1 -5
-#define KEY_F2 -5
-#define KEY_F3 -5
-#define KEY_F4 -5
-#define KEY_F5 -5
-#define KEY_F6 -5
-#define KEY_F7 -5
-#define KEY_F8 -5
-#define KEY_F9 -5
-#define KEY_F10 -5
-#define KEY_F11 -5
-#define KEY_F12 -5
-
-#define KDB_SHIFT  1
-#define KDB_CAPSLOCK  2
-#define KDB_ALT  4
-#define KDB_CTRL  8
-#define KDB_HOME  16
 
 #endif  /* __GFX_H */

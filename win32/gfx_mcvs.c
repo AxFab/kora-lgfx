@@ -1,4 +1,4 @@
-#include "gfx.h"
+#include <kora/gfx.h>
 #include <stdio.h>
 #include <windows.h>
 #include <tchar.h>

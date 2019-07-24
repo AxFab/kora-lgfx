@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <string.h>
-#include "gfx.h"
+#include <kora/gfx.h>
 
 static void *memcpy32(void *dest, void *src, size_t lg)
 {
