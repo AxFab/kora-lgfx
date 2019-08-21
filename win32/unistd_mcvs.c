@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <kora/mcrs.h>
 
 FILE *_fhopen(HANDLE hFile)
 {
@@ -31,13 +32,15 @@ int pipe(int fds[2])
     return pipe2(fds, 0);
 }
 
-int __exec(char *name, const char **argv, const char **env, int fds[3])
+LIBAPI int __exec(char *name, const char **argv, const char **env, int fds[3])
 {
     int i;
     char cmdline[4096];
 
+	int argc = 0;
+	while (argv[argc++]);
     strncpy(cmdline, name, 4096);
-    for (i = 0; i < argc; ++i) {
+    for (i = 0; i < argc - 1; ++i) {
         strncat(cmdline, " ", 4096);
         strncat(cmdline, argv[i], 4096);
     }

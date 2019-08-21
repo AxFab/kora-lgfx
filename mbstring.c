@@ -1,6 +1,11 @@
 #include <stddef.h>
 #include <kora/gfx.h>
 
+LIBAPI int uclen(const char* str, size_t lg);
+LIBAPI int mbtouc(uchar_t* unicode, const char* str, size_t lg);
+LIBAPI int uctomb(char* str, uchar_t unicode);
+
+
 int uclen(const char *str, size_t lg)
 {
     int i, len = 1;

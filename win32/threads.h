@@ -9,6 +9,7 @@
 #define EMULATED_THREADS_H_INCLUDED_
 
 #include <time.h>
+#include <kora/mcrs.h>
 
 #if defined(_WIN32) && defined(_MSC_VER)
 #include <windows.h>
@@ -113,35 +114,35 @@ enum {
 
 
 /*-------------------------- functions --------------------------*/
-void call_once(once_flag *flag, void (*func)(void));
+LIBAPI void call_once(once_flag *flag, void (*func)(void));
 
-int cnd_broadcast(cnd_t *cond);
-void cnd_destroy(cnd_t *cond);
-int cnd_init(cnd_t *cond);
-int cnd_signal(cnd_t *cond);
-int cnd_timedwait(cnd_t *cond, mtx_t *mtx, const xtime *xt);
-int cnd_wait(cnd_t *cond, mtx_t *mtx);
+LIBAPI int cnd_broadcast(cnd_t *cond);
+LIBAPI void cnd_destroy(cnd_t *cond);
+LIBAPI int cnd_init(cnd_t *cond);
+LIBAPI int cnd_signal(cnd_t *cond);
+LIBAPI int cnd_timedwait(cnd_t *cond, mtx_t *mtx, const xtime *xt);
+LIBAPI int cnd_wait(cnd_t *cond, mtx_t *mtx);
 
-void mtx_destroy(mtx_t *mtx);
-int mtx_init(mtx_t *mtx, int type);
-int mtx_lock(mtx_t *mtx);
-int mtx_timedlock(mtx_t *mtx, const xtime *xt);
-int mtx_trylock(mtx_t *mtx);
-int mtx_unlock(mtx_t *mtx);
+LIBAPI void mtx_destroy(mtx_t *mtx);
+LIBAPI int mtx_init(mtx_t *mtx, int type);
+LIBAPI int mtx_lock(mtx_t *mtx);
+LIBAPI int mtx_timedlock(mtx_t *mtx, const xtime *xt);
+LIBAPI int mtx_trylock(mtx_t *mtx);
+LIBAPI int mtx_unlock(mtx_t *mtx);
 
-int thrd_create(thrd_t *thr, thrd_start_t func, void *arg);
-thrd_t thrd_current(void);
-int thrd_detach(thrd_t thr);
-int thrd_equal(thrd_t thr0, thrd_t thr1);
-void thrd_exit(int res);
-int thrd_join(thrd_t thr, int *res);
-void thrd_sleep(const xtime *xt);
-void thrd_yield(void);
+LIBAPI int thrd_create(thrd_t *thr, thrd_start_t func, void *arg);
+LIBAPI thrd_t thrd_current(void);
+LIBAPI int thrd_detach(thrd_t thr);
+LIBAPI int thrd_equal(thrd_t thr0, thrd_t thr1);
+LIBAPI void thrd_exit(int res);
+LIBAPI int thrd_join(thrd_t thr, int *res);
+LIBAPI void thrd_sleep(const xtime *xt);
+LIBAPI void thrd_yield(void);
 
-int tss_create(tss_t *key, tss_dtor_t dtor);
-void tss_delete(tss_t key);
-void *tss_get(tss_t key);
-int tss_set(tss_t key, void *val);
+LIBAPI int tss_create(tss_t *key, tss_dtor_t dtor);
+LIBAPI void tss_delete(tss_t key);
+LIBAPI void *tss_get(tss_t key);
+LIBAPI int tss_set(tss_t key, void *val);
 
 int xtime_get(xtime *xt, int base);
 #define TIME_UTC  1

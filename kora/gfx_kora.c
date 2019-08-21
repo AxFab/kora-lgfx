@@ -76,9 +76,15 @@ void gfx_flip(gfx_t *gfx)
 
 int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
 {
+    char tmp[120];
     for (;;) {
-        if (read(gfx->fi, (char *)msg, sizeof(*msg)) != 0)
+        if (read(gfx->fi, (char *)msg, sizeof(*msg)) != 0) {
+            if (msg->message != EV_TIMER) {
+                snprintf(tmp, 120, "Event recv <%d:%x.%x>", msg->message, msg->param1, msg->param2);
+                write(1, tmp, strlen(tmp));
+            }
             return 0;
+        }
     }
 }
 

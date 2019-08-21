@@ -146,6 +146,16 @@ void gfx_destroy(gfx_t *gfx)
     free(gfx);
 }
 
+void gfx_flip(gfx_t* gfx)
+{
+	RECT r;
+	r.left = 0;
+	r.top = 0;
+	r.right = gfx->width;
+	r.bottom = gfx->height;
+	HWND hwnd = (HWND)gfx->fd;
+	InvalidateRect(hwnd, &r, FALSE);
+}
 
 int gfx_map(gfx_t *gfx)
 {
@@ -171,8 +181,92 @@ int gfx_unmap(gfx_t *gfx)
     return 0;
 }
 
-const char *pipe_name = "";
 
+int gfx_poll(gfx_t* gfx, gfx_msg_t* msg)
+{
+	MSG wm;
+	HWND hwnd = (HWND)gfx->fd;
+	for (;;) {
+		if (!GetMessage(&wm, hwnd, 0, 0))
+			continue;
+		memset(msg, 0, sizeof(*msg));
+		switch (wm.message) {
+		case 0:
+			msg->message = EV_QUIT;
+			break;
+		case WM_MOUSEMOVE:
+			msg->message = EV_MOUSEMOVE;
+			msg->param1 = wm.lParam;
+			break;
+		case WM_LBUTTONDOWN:
+			msg->message = EV_BUTTONDOWN;
+			msg->param1 = 1;
+			break;
+		case WM_LBUTTONUP:
+			msg->message = EV_BUTTONUP;
+			msg->param1 = 1;
+			break;
+		case WM_RBUTTONDOWN:
+			msg->message = EV_BUTTONDOWN;
+			msg->param1 = 2;
+			break;
+		case WM_RBUTTONUP:
+			msg->message = EV_BUTTONUP;
+			msg->param1 = 2;
+			break;
+		case WM_MBUTTONDOWN:
+			msg->message = EV_BUTTONDOWN;
+			msg->param1 = 4;
+			break;
+		case WM_MBUTTONUP:
+			msg->message = EV_BUTTONUP;
+			msg->param1 = 4;
+			break;
+		case WM_MOUSEWHEEL:
+			msg->message = EV_MOUSEWHEEL;
+			msg->param1 = (signed short)(wm.wParam >> 16) / 40;
+			break;
+		case WM_KEYDOWN:
+			msg->message = EV_KEYDOWN;
+			msg->param1 = (wm.lParam >> 16) & 0x7F;
+			break;
+		case WM_KEYUP:
+			msg->message = EV_KEYUP;
+			msg->param1 = (wm.lParam >> 16) & 0x7F;
+			break;
+		case WM_TIMER:
+			msg->message = EV_TIMER;
+			break;
+		case WM_PAINT:
+			{
+				PAINTSTRUCT ps;
+				HDC hdc = BeginPaint(hwnd, &ps);
+
+				HBITMAP backbuffer = CreateBitmap(gfx->width, gfx->height, 1, 32, gfx->pixels);
+				HDC backbuffDC = CreateCompatibleDC(hdc);
+				SelectObject(backbuffDC, backbuffer);
+				BitBlt(hdc, 0, 0, gfx->width, gfx->height, backbuffDC, 0, 0, SRCCOPY);
+				DeleteObject(backbuffer);
+				DeleteDC(backbuffDC);
+				EndPaint(hwnd, &ps);
+
+				TranslateMessage(&wm);
+				DispatchMessage(&wm);
+			}
+			continue;
+		default:
+			TranslateMessage(&wm);
+			DispatchMessage(&wm);
+			continue;
+		}
+		TranslateMessage(&wm);
+		DispatchMessage(&wm);
+		return 0;
+	}
+
+}
+
+#if 0
 int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)
 {
     int lx = 0, ly = 0, rx = 0, ry = 0;
@@ -262,7 +356,7 @@ int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)
         DispatchMessage(&msg);
     }
 }
-
+#endif
 
 
 
