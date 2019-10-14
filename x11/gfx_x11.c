@@ -17,7 +17,11 @@ int clipboard_paste(char *buf, int len)
 int __exec(char *name, const char **argv, const char **env, int fds[3])
 {
     int i;
+    int argc = 0;
     char cmdline[4096];
+
+    while (argv[argc])
+        ++argc;
 
     strncpy(cmdline, name, 4096);
     for (i = 0; i < argc; ++i) {
@@ -92,7 +96,7 @@ int gfx_unmap(gfx_t *gfx)
     return 0;
 }
 
-static void gfx_flip(gfx_t *gfx)
+void gfx_flip(gfx_t *gfx)
 {
     struct xwin *wi = (struct xwin *)gfx->fd;
     XPutImage(wi->display, wi->window, wi->gc, wi->img, 0, 0, 0, 0, gfx->width, gfx->height);
