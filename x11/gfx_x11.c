@@ -102,24 +102,15 @@ void gfx_flip(gfx_t *gfx)
     XPutImage(wi->display, wi->window, wi->gc, wi->img, 0, 0, 0, 0, gfx->width, gfx->height);
 }
 
-int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)
+int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
 {
     struct xwin *wi = (struct xwin *)gfx->fd;
     XEvent e;
     XKeyEvent *ke = (XKeyEvent *)&e;
-    for (;;) {
-        XNextEvent(wi->display, &e);
-        switch (e.type) {
-        case Expose:
-            if (handlers->expose) {
-                handlers->expose(gfx, arg, NULL);
-                gfx_flip(gfx);
-            }
-            // PAINT
-            // COPY !
-            //
-            break;
-        }
+    XNextEvent(wi->display, &e);
+    switch (e.type) {
+    case Expose:
+        break;
     }
     return 0;
 }

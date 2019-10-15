@@ -31,4 +31,5 @@ script:
   - cd build
   - ../configure
   - make
+  - make check
 

@@ -14,43 +14,14 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-topdir ?= $(shell readlink -f $(dir $(word 1,$(MAKEFILE_LIST))))
-gendir ?= $(shell pwd)
 
-include $(topdir)/var/make/global.mk
+package: $(pack).tar.xz
 
-all: libgfx
+install: $(call fn_inst,$(BINS) $(LIBS)) $(call fn_flcp,$(FLCP))
 
-DISTO ?= kora
+$(pack).tar.xz: $(call fn_inst,$(BINS) $(LIBS)) $(call fn_flcp,$(FLCP)) $(call fn_flcp,$(FLCP2))
+	$(S) mkdir -p $(dir $@)
+	$(Q) echo "    TAR $@"
+	$(V) cd $(prefix) && tar --transform='flags=r;s|$(prefix)/||' -PcJf $@ $^ 
 
-include $(topdir)/var/make/build.mk
-
-SRCS-y += $(wildcard $(srcdir)/*.c)
-SRCS-y += $(wildcard $(srcdir)/$(DISTO)/*.c)
-
-CFLAGS ?= -Wall -Wextra -ggdb
-CFLAGS += -fPIC
-CFLAGS += -I $(topdir)/include
-CFLAGS += -I $(topdir)/$(DISTO)
-
-ifeq ($(DISTO),x11)
-LFLAGS += -lpthread -lX11
-else ifeq ($(DISTO),bmp)
-LFLAGS += -lpthread
-else ifeq ($(DISTO),kora)
-CFLAGS += -Dmain=_main
-endif
-
-$(eval $(call link_shared,gfx,SRCS,LFLAGS))
-
-FLCP += $(topdir)/include/kora/gfx.h
-
-pack ?= lgfx-$(DISTO)-$(GIT_V)
-
-include $(topdir)/var/make/install.mk
-include $(topdir)/var/make/check.mk
-
-ifeq ($(NODEPS),)
-include $(call fn_deps,SRCS-y)
-endif
 

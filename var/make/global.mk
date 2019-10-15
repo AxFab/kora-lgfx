@@ -70,4 +70,7 @@ endif
 ifeq ($(MAKECMDGOALS),distclean)
 NODEPS = 1
 endif
+ifeq ($(MAKECMDGOALS),package)
+prefix = $(gendir)
+endif
 
