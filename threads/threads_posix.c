@@ -253,7 +253,7 @@ int thrd_join(thrd_t thr, int *res)
 }
 
 // 7.25.5.7
-void thrd_sleep(const xtime *xt)
+void thrd_sleep(const xtime *xt, xtime *rm)
 {
     struct timespec req;
     assert(xt);

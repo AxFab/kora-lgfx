@@ -1,7 +1,7 @@
 #include <assert.h>
-#include <unistd.h>
 #include <string.h>
 #include <kora/gfx.h>
+#include <threads.h>
 
 static void *memcpy32(void *dest, void *src, size_t lg)
 {
@@ -69,32 +69,6 @@ void gfx_clear(gfx_t *gfx, uint32_t color)
 {
     (void)gfx->fi;
     memset32(gfx->pixels, color, gfx->pitch * gfx->height);
-}
-
-
-void gfx_glyph(gfx_t *gfx, const font_bmp_t *font, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y)
-{
-    int l, px, ph;
-    int py = y;
-    int gx = MIN(gfx->width, x + font->width);
-    int sx = MIN(gfx->width, x + font->dispx);
-    int gy = MIN(gfx->height, y + font->height);
-    int sy = MIN(gfx->height, y + font->dispy);
-    const uint8_t *glyph = &font->glyphs[(unicode - 0x20) * font->glyph_size];
-    for (l = 0; py < gy; ++py) {
-        ph = py * gfx->width;
-        for (px = x; px < gx; ++px, ++l)
-            gfx->pixels4[ph + px] = (glyph[l / 8] & (1 << l % 8)) ? fg : bg;
-        for (; px < sx; ++px)
-            gfx->pixels4[ph + px] = bg;
-        // TODO -- l is late if gx < x + font->width
-    }
-
-    for (; py < sy; ++py) {
-        ph = py * gfx->width;
-        for (px = x; px < sx; ++px)
-            gfx->pixels4[ph + px] = bg;
-    }
 }
 
 
@@ -166,8 +140,12 @@ int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)
             gfx->width = msg.param1 >> 16;
             gfx->height = msg.param1 & 0xffff;
             break;
-        case EV_DELAY:
-            usleep(msg.param1);
+        case EV_DELAY: {
+            struct timespec ts;
+            ts.tv_sec = msg.param1 / 1000000;
+            ts.tv_sec = msg.param1 % 1000000;
+            thrd_sleep(&ts, NULL);
+        }
             break;
         default:
             break;

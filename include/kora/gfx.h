@@ -18,7 +18,6 @@
 #  endif
 #endif
 
-typedef int uchar_t;
 typedef struct gfx gfx_t;
 typedef struct gfx_seat gfx_seat_t;
 typedef struct gfx_handlers gfx_handlers_t;

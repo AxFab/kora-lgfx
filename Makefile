@@ -29,17 +29,19 @@ DISTO ?= kora
 include $(topdir)/var/make/build.mk
 
 SRCS-y += $(wildcard $(srcdir)/*.c)
-SRCS-y += $(wildcard $(srcdir)/$(DISTO)/*.c)
+SRCS-y += $(srcdir)/disto/gfx_$(DISTO).c
 
 CFLAGS ?= -Wall -Wextra -ggdb
-CFLAGS += -fPIC
-CFLAGS += -I $(topdir)/include
-CFLAGS += -I $(topdir)/$(DISTO)
+CFLAGS += -fPIC -I $(topdir)/include
+
+ifeq ($(add_threads),y)
+SRCS- += $(srcdir)/threads/threds_posix.c
+CFLAGS += -I $(topdir)/threads
+LFLAGS += -lpthread
+endif
 
 ifeq ($(DISTO),x11)
-LFLAGS += -lpthread -lX11
-else ifeq ($(DISTO),bmp)
-LFLAGS += -lpthread
+LFLAGS += -lX11
 else ifeq ($(DISTO),kora)
 CFLAGS += -Dmain=_main
 endif

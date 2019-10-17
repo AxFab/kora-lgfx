@@ -136,7 +136,7 @@ LIBAPI int thrd_detach(thrd_t thr);
 LIBAPI int thrd_equal(thrd_t thr0, thrd_t thr1);
 LIBAPI void thrd_exit(int res);
 LIBAPI int thrd_join(thrd_t thr, int *res);
-LIBAPI void thrd_sleep(const xtime *xt);
+LIBAPI void thrd_sleep(const xtime *xt, const xtime* rem);
 LIBAPI void thrd_yield(void);
 
 LIBAPI int tss_create(tss_t *key, tss_dtor_t dtor);
