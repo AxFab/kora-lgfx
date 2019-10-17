@@ -46,8 +46,12 @@ case "$arch" in
         arch=arm
         vendor=phone
         ;;
+    aarch64)
+        arch=aarch64
+        vendor=phone
+        ;;
     *)
-        echo "Unsupported architecture" >&2
+        echo "Unsupported architecture: $arch" >&2
         exit 1
         ;;
 esac
