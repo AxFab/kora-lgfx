@@ -22,6 +22,7 @@ include $(topdir)/var/make/global.mk
 all: libgfx
 
 DISTO ?= kora
+has_threads ?= $(shell $(topdir)/var/make/compiler.sh '__STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__' gcc)
 
 include $(topdir)/var/make/build.mk
 
@@ -31,7 +32,7 @@ SRCS-y += $(srcdir)/disto/gfx_$(DISTO).c
 CFLAGS ?= -Wall -Wextra -ggdb
 CFLAGS += -fPIC -I $(topdir)/include
 
-ifeq ($(add_threads),y)
+ifeq ($(has_threads),n)
 SRCS- += $(srcdir)/threads/threds_posix.c
 CFLAGS += -I $(topdir)/threads
 LFLAGS += -lpthread
@@ -56,3 +57,5 @@ ifeq ($(NODEPS),)
 include $(call fn_deps,SRCS-y)
 endif
 
+qw:
+	@echo has_threads ${has_threads}
