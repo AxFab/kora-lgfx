@@ -43,7 +43,8 @@ HINSTANCE appInstance = NULL;
 
 gfx_t *__win32_gfx = NULL;
 void *__win32_arg = NULL;
-gfx_handlers_t *__win32_handlers = NULL;
+
+
 
 LRESULT CALLBACK WndProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
@@ -64,9 +65,9 @@ LRESULT CALLBACK WndProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In
                 __win32_gfx->width = rect.right;
                 __win32_gfx->height = rect.bottom;
             }
-
+            /*
             if (__win32_handlers->resize)
-                __win32_handlers->resize(__win32_gfx, __win32_arg);
+                __win32_handlers->resize(__win32_gfx, __win32_arg);*/
         }
         break;
     default:
@@ -98,6 +99,7 @@ static void gfx_win32_init_()
     }
 }
 
+/*
 static void gfx_painting(gfx_t *gfx, gfx_handlers_t *handlers, void *arg, gfx_seat_t *seat)
 {
     HWND hwnd = (HWND)gfx->fd;
@@ -116,7 +118,7 @@ static void gfx_painting(gfx_t *gfx, gfx_handlers_t *handlers, void *arg, gfx_se
     DeleteObject(backbuffer);
     DeleteDC(backbuffDC);
     EndPaint(hwnd, &ps);
-}
+}*/
 
 
 gfx_t *gfx_create_window(void *ctx, int width, int height, int flag)
@@ -135,10 +137,11 @@ gfx_t *gfx_create_window(void *ctx, int width, int height, int flag)
 
     UINT timer;
     SetTimer((HWND)gfx->fd, (UINT_PTR)&timer, 25, NULL);
+    gfx->flags = GFX_FL_PAINTTICK | GFX_FL_INVALID;
     return gfx;
 }
 
-void gfx_destroy(gfx_t *gfx)
+void gfx_destroy(gfx_t* gfx)
 {
     DestroyWindow((HWND)gfx->fd);
     if (gfx->pixels)
@@ -146,7 +149,15 @@ void gfx_destroy(gfx_t *gfx)
     free(gfx);
 }
 
-void gfx_flip(gfx_t* gfx)
+void gfx_close(gfx_t* gfx)
+{
+    DestroyWindow((HWND)gfx->fd);
+    if (gfx->pixels)
+        _aligned_free(gfx->pixels);
+    free(gfx);
+}
+
+int gfx_flip(gfx_t* gfx)
 {
 	RECT r;
 	r.left = 0;
@@ -192,50 +203,50 @@ int gfx_poll(gfx_t* gfx, gfx_msg_t* msg)
 		memset(msg, 0, sizeof(*msg));
 		switch (wm.message) {
 		case 0:
-			msg->message = EV_QUIT;
+			msg->message = GFX_EV_QUIT;
 			break;
 		case WM_MOUSEMOVE:
-			msg->message = EV_MOUSEMOVE;
+			msg->message = GFX_EV_MOUSEMOVE;
 			msg->param1 = wm.lParam;
 			break;
 		case WM_LBUTTONDOWN:
-			msg->message = EV_BUTTONDOWN;
+			msg->message = GFX_EV_BTNDOWN;
 			msg->param1 = 1;
 			break;
 		case WM_LBUTTONUP:
-			msg->message = EV_BUTTONUP;
+			msg->message = GFX_EV_BTNUP;
 			msg->param1 = 1;
 			break;
 		case WM_RBUTTONDOWN:
-			msg->message = EV_BUTTONDOWN;
+			msg->message = GFX_EV_BTNDOWN;
 			msg->param1 = 2;
 			break;
 		case WM_RBUTTONUP:
-			msg->message = EV_BUTTONUP;
+			msg->message = GFX_EV_BTNUP;
 			msg->param1 = 2;
 			break;
 		case WM_MBUTTONDOWN:
-			msg->message = EV_BUTTONDOWN;
+			msg->message = GFX_EV_BTNDOWN;
 			msg->param1 = 4;
 			break;
 		case WM_MBUTTONUP:
-			msg->message = EV_BUTTONUP;
+			msg->message = GFX_EV_BTNUP;
 			msg->param1 = 4;
 			break;
 		case WM_MOUSEWHEEL:
-			msg->message = EV_MOUSEWHEEL;
+			msg->message = GFX_EV_MOUSEWHEEL;
 			msg->param1 = (signed short)(wm.wParam >> 16) / 40;
 			break;
 		case WM_KEYDOWN:
-			msg->message = EV_KEYDOWN;
+			msg->message = GFX_EV_KEYDOWN;
 			msg->param1 = (wm.lParam >> 16) & 0x7F;
 			break;
 		case WM_KEYUP:
-			msg->message = EV_KEYUP;
+			msg->message = GFX_EV_KEYUP;
 			msg->param1 = (wm.lParam >> 16) & 0x7F;
 			break;
 		case WM_TIMER:
-			msg->message = EV_TIMER;
+			msg->message = GFX_EV_TIMER;
 			break;
 		case WM_PAINT:
 			{
@@ -254,6 +265,10 @@ int gfx_poll(gfx_t* gfx, gfx_msg_t* msg)
 				DispatchMessage(&wm);
 			}
 			continue;
+        case WM_USER + 1:
+            msg->message = wm.wParam;
+            msg->param1 = wm.lParam;
+            break;
 		default:
 			TranslateMessage(&wm);
 			DispatchMessage(&wm);
@@ -265,6 +280,22 @@ int gfx_poll(gfx_t* gfx, gfx_msg_t* msg)
 	}
 
 }
+
+
+int gfx_push(gfx_t* gfx, int type)
+{
+}
+
+int gfx_push_msg(gfx_t* gfx, int type, int param)
+{
+    HWND hwnd = (HWND)gfx->fd;
+    PostMessage(hwnd, WM_USER + 1, type, param);
+}
+
+int gfx_expose(gfx_t* gfx)
+{
+}
+
 
 #if 0
 int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)

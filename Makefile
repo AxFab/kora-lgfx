@@ -56,6 +56,3 @@ include $(topdir)/var/make/check.mk
 ifeq ($(NODEPS),)
 include $(call fn_deps,SRCS-y)
 endif
-
-qw:
-	@echo has_threads ${has_threads}
