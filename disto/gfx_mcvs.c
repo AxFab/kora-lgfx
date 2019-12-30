@@ -159,13 +159,13 @@ void gfx_close(gfx_t* gfx)
 
 int gfx_flip(gfx_t* gfx)
 {
-	RECT r;
-	r.left = 0;
-	r.top = 0;
-	r.right = gfx->width;
-	r.bottom = gfx->height;
-	HWND hwnd = (HWND)gfx->fd;
-	InvalidateRect(hwnd, &r, FALSE);
+    RECT r;
+    r.left = 0;
+    r.top = 0;
+    r.right = gfx->width;
+    r.bottom = gfx->height;
+    HWND hwnd = (HWND)gfx->fd;
+    InvalidateRect(hwnd, &r, FALSE);
 }
 
 int gfx_map(gfx_t *gfx)
@@ -174,14 +174,16 @@ int gfx_map(gfx_t *gfx)
     if (gfx->pixels != NULL)
         return 0;
 
-    if (GetClientRect((HWND)gfx->fd, &rect) == FALSE)
-        return -1;
-    gfx->width = rect.right;
-    gfx->height = rect.bottom;
-    gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
+    if (gfx->fd != -1) {
+        if (GetClientRect((HWND)gfx->fd, &rect) == FALSE)
+            return -1;
+        gfx->width = rect.right;
+        gfx->height = rect.bottom;
+        gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
+    }
     gfx->pixels = _aligned_malloc(gfx->pitch * gfx->height, 1024 * 16);
     return 0;
-}
+ }
 
 int gfx_unmap(gfx_t *gfx)
 {
@@ -195,90 +197,89 @@ int gfx_unmap(gfx_t *gfx)
 
 int gfx_poll(gfx_t* gfx, gfx_msg_t* msg)
 {
-	MSG wm;
-	HWND hwnd = (HWND)gfx->fd;
-	for (;;) {
-		if (!GetMessage(&wm, hwnd, 0, 0))
-			continue;
-		memset(msg, 0, sizeof(*msg));
-		switch (wm.message) {
-		case 0:
-			msg->message = GFX_EV_QUIT;
-			break;
-		case WM_MOUSEMOVE:
-			msg->message = GFX_EV_MOUSEMOVE;
-			msg->param1 = wm.lParam;
-			break;
-		case WM_LBUTTONDOWN:
-			msg->message = GFX_EV_BTNDOWN;
-			msg->param1 = 1;
-			break;
-		case WM_LBUTTONUP:
-			msg->message = GFX_EV_BTNUP;
-			msg->param1 = 1;
-			break;
-		case WM_RBUTTONDOWN:
-			msg->message = GFX_EV_BTNDOWN;
-			msg->param1 = 2;
-			break;
-		case WM_RBUTTONUP:
-			msg->message = GFX_EV_BTNUP;
-			msg->param1 = 2;
-			break;
-		case WM_MBUTTONDOWN:
-			msg->message = GFX_EV_BTNDOWN;
-			msg->param1 = 4;
-			break;
-		case WM_MBUTTONUP:
-			msg->message = GFX_EV_BTNUP;
-			msg->param1 = 4;
-			break;
-		case WM_MOUSEWHEEL:
-			msg->message = GFX_EV_MOUSEWHEEL;
-			msg->param1 = (signed short)(wm.wParam >> 16) / 40;
-			break;
-		case WM_KEYDOWN:
-			msg->message = GFX_EV_KEYDOWN;
-			msg->param1 = (wm.lParam >> 16) & 0x7F;
-			break;
-		case WM_KEYUP:
-			msg->message = GFX_EV_KEYUP;
-			msg->param1 = (wm.lParam >> 16) & 0x7F;
-			break;
-		case WM_TIMER:
-			msg->message = GFX_EV_TIMER;
-			break;
-		case WM_PAINT:
-			{
-				PAINTSTRUCT ps;
-				HDC hdc = BeginPaint(hwnd, &ps);
+    MSG wm;
+    HWND hwnd = (HWND)gfx->fd;
+    for (;;) {
+        if (!GetMessage(&wm, hwnd, 0, 0))
+            continue;
+        memset(msg, 0, sizeof(*msg));
+        switch (wm.message) {
+        case 0:
+            msg->message = GFX_EV_QUIT;
+            break;
+        case WM_MOUSEMOVE:
+            msg->message = GFX_EV_MOUSEMOVE;
+            msg->param1 = wm.lParam;
+            break;
+        case WM_LBUTTONDOWN:
+            msg->message = GFX_EV_BTNDOWN;
+            msg->param1 = 1;
+            break;
+        case WM_LBUTTONUP:
+            msg->message = GFX_EV_BTNUP;
+            msg->param1 = 1;
+            break;
+        case WM_RBUTTONDOWN:
+            msg->message = GFX_EV_BTNDOWN;
+            msg->param1 = 2;
+            break;
+        case WM_RBUTTONUP:
+            msg->message = GFX_EV_BTNUP;
+            msg->param1 = 2;
+            break;
+        case WM_MBUTTONDOWN:
+            msg->message = GFX_EV_BTNDOWN;
+            msg->param1 = 4;
+            break;
+        case WM_MBUTTONUP:
+            msg->message = GFX_EV_BTNUP;
+            msg->param1 = 4;
+            break;
+        case WM_MOUSEWHEEL:
+            msg->message = GFX_EV_MOUSEWHEEL;
+            msg->param1 = (signed short)(wm.wParam >> 16) / 40;
+            break;
+        case WM_KEYDOWN:
+            msg->message = GFX_EV_KEYDOWN;
+            msg->param1 = (wm.lParam >> 16) & 0x7F;
+            break;
+        case WM_KEYUP:
+            msg->message = GFX_EV_KEYUP;
+            msg->param1 = (wm.lParam >> 16) & 0x7F;
+            break;
+        case WM_TIMER:
+            msg->message = GFX_EV_TIMER;
+            break;
+        case WM_PAINT:
+            {
+                PAINTSTRUCT ps;
+                HDC hdc = BeginPaint(hwnd, &ps);
 
-				HBITMAP backbuffer = CreateBitmap(gfx->width, gfx->height, 1, 32, gfx->pixels);
-				HDC backbuffDC = CreateCompatibleDC(hdc);
-				SelectObject(backbuffDC, backbuffer);
-				BitBlt(hdc, 0, 0, gfx->width, gfx->height, backbuffDC, 0, 0, SRCCOPY);
-				DeleteObject(backbuffer);
-				DeleteDC(backbuffDC);
-				EndPaint(hwnd, &ps);
+                HBITMAP backbuffer = CreateBitmap(gfx->width, gfx->height, 1, 32, gfx->pixels);
+                HDC backbuffDC = CreateCompatibleDC(hdc);
+                SelectObject(backbuffDC, backbuffer);
+                BitBlt(hdc, 0, 0, gfx->width, gfx->height, backbuffDC, 0, 0, SRCCOPY);
+                DeleteObject(backbuffer);
+                DeleteDC(backbuffDC);
+                EndPaint(hwnd, &ps);
 
-				TranslateMessage(&wm);
-				DispatchMessage(&wm);
-			}
-			continue;
+                TranslateMessage(&wm);
+                DispatchMessage(&wm);
+            }
+            continue;
         case WM_USER + 1:
             msg->message = wm.wParam;
             msg->param1 = wm.lParam;
             break;
-		default:
-			TranslateMessage(&wm);
-			DispatchMessage(&wm);
-			continue;
-		}
-		TranslateMessage(&wm);
-		DispatchMessage(&wm);
-		return 0;
-	}
-
+        default:
+            TranslateMessage(&wm);
+            DispatchMessage(&wm);
+            continue;
+        }
+        TranslateMessage(&wm);
+        DispatchMessage(&wm);
+        return 0;
+    }
 }
 
 
@@ -295,100 +296,4 @@ int gfx_push_msg(gfx_t* gfx, int type, int param)
 int gfx_expose(gfx_t* gfx)
 {
 }
-
-
-#if 0
-int gfx_loop(gfx_t *gfx, void *arg, gfx_handlers_t *handlers)
-{
-    int lx = 0, ly = 0, rx = 0, ry = 0;
-    int key = 0, key2 = 0;
-    __win32_gfx = gfx;
-    __win32_arg = arg;
-    __win32_handlers = handlers;
-
-    gfx_seat_t seat;
-    memset(&seat, 0, sizeof(seat));
-    MSG msg;
-    HWND hwnd = (HWND)gfx->fd;
-    if (hwnd == 0)
-        return -1;
-    for (;;) {
-        if (!GetMessage(&msg, hwnd, 0, 0))
-            continue;
-        switch (msg.message) {
-        case 0:
-            return 0;
-        case WM_PAINT:
-            if (handlers->expose)
-                gfx_painting(gfx, handlers, arg, &seat);
-            break;
-        case WM_MOUSEMOVE:
-            seat.mouse_x = msg.lParam & 0x7fff;
-            seat.mouse_y = msg.lParam >> 16;
-            if (handlers->mse_move)
-                handlers->mse_move(gfx, arg, &seat);
-            break;
-        case WM_LBUTTONDOWN:
-            seat.btn_status = msg.wParam;
-            if (handlers->mse_down)
-                handlers->mse_down(gfx, arg, &seat, 1);
-            break;
-        case WM_LBUTTONUP:
-            seat.btn_status = msg.wParam;
-            if (handlers->mse_up)
-                handlers->mse_up(gfx, arg, &seat, 1);
-            break;
-        case WM_RBUTTONDOWN:
-            seat.btn_status = msg.wParam;
-            if (handlers->mse_down)
-                handlers->mse_down(gfx, arg, &seat, 2);
-            break;
-        case WM_RBUTTONUP:
-            seat.btn_status = msg.wParam;
-            if (handlers->mse_up)
-                handlers->mse_up(gfx, arg, &seat, 2);
-            break;
-        case WM_MBUTTONDOWN:
-            seat.btn_status = msg.wParam;
-            if (handlers->mse_down)
-                handlers->mse_down(gfx, arg, &seat, 4);
-            break;
-        case WM_MBUTTONUP:
-            seat.btn_status = msg.wParam;
-            if (handlers->mse_up)
-                handlers->mse_up(gfx, arg, &seat, 4);
-            break;
-        case WM_MOUSEWHEEL:
-            if (handlers->mse_wheel)
-                handlers->mse_wheel(gfx, arg, &seat, (signed short)(msg.wParam >> 16) / 40);
-            break;
-        case WM_KEYDOWN:
-            if (handlers->key_down)
-                handlers->key_down(gfx, arg, &seat, (msg.lParam >> 16) & 0x7F);
-            break;
-        case WM_KEYUP:
-            if (handlers->key_up)
-                handlers->key_up(gfx, arg, &seat, (msg.lParam >> 16) & 0x7F);
-            break;
-        case WM_TIMER:
-            if (handlers->repaint == NULL || handlers->repaint(gfx, arg, &seat)) {
-                RECT rect;
-                rect.left = 0;
-                rect.right = gfx->width;
-                rect.top = 0;
-                rect.bottom = gfx->height;
-                InvalidateRect(hwnd, &rect, FALSE);
-            }
-            break;
-        default:
-            break;
-        }
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-}
-#endif
-
-
-
 

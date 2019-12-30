@@ -2,6 +2,10 @@
 #include <string.h>
 #include <kora/gfx.h>
 #include <threads.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 static void *memcpy32(void *dest, void *src, size_t lg)
 {
@@ -107,7 +111,7 @@ static void gfx_fill_alpha_blending(gfx_t* dest, uint32_t color, int minx, int m
     }
 }
 
-int gfx_fill(gfx_t* dest, uint32_t color, gfx_blendmode_t blend, gfx_clip_t* clip)
+void gfx_fill(gfx_t* dest, uint32_t color, gfx_blendmode_t blend, gfx_clip_t* clip)
 {
     int i;
     int minx = clip == NULL ? 0 : MAX(0, clip->left);
@@ -116,40 +120,49 @@ int gfx_fill(gfx_t* dest, uint32_t color, gfx_blendmode_t blend, gfx_clip_t* cli
     int maxy = clip == NULL ? dest->height : MIN(dest->height, clip->bottom);
 
     switch (blend) {
-        case GFX_COPY_BLEND:
-            for (i = miny; i < maxy; ++i) {
-                int k = i * dest->pitch;
-                memset32(&dest->pixels[k + minx * 4], color, (maxx - minx) * 4);
-            }
-            break;
-        case GFX_ALPHA_BLENDING:
-            gfx_fill_alpha_blending(dest, color, minx, maxx, miny, maxy);
-            break;
-        default:
-            return 1;
+    case GFX_COPY_BLEND:
+        for (i = miny; i < maxy; ++i) {
+            int k = i * dest->pitch;
+            memset32(&dest->pixels[k + minx * 4], color, (maxx - minx) * 4);
+        }
+        break;
+    case GFX_ALPHA_BLENDING:
+        gfx_fill_alpha_blending(dest, color, minx, maxx, miny, maxy);
+        break;
     }
-    return 0;
 }
 
-int gfx_blit(gfx_t* dest, gfx_t* src, gfx_blendmode_t blend, gfx_clip_t* clip)
+
+void gfx_blit(gfx_t* dest, gfx_t* src, gfx_blendmode_t blend, gfx_clip_t* clip)
 {
-    int i, j, k0, k1;
+    int i;
     int minx = clip == NULL ? 0 : MAX(0, clip->left);
     int maxx = clip == NULL ? dest->width : MIN(dest->width, clip->right);
     int miny = clip == NULL ? 0 : MAX(0, clip->top);
     int maxy = clip == NULL ? dest->height : MIN(dest->height, clip->bottom);
 
-    for (i = miny; i < maxy; ++i) {
-        k0 = i * dest->pitch;
-        k1 = (i % src->height)  * src->pitch;
-        for (j = minx; j < maxx; ++j) {
-            int c = src->pixels4[k1 + (j  % src->width)];
-            dest->pixels4[k0 + j] = c;
+    switch (blend) {
+    case GFX_COPY_BLEND:
+        for (i = miny; i < maxy; ++i) {
+            int k0 = i * dest->pitch;
+            int k1 = i * src->pitch;
+            memcpy32(&dest->pixels[k0 + minx * 4], &src->pixels[k1 + minx * 4], (maxx - minx) * 4);
         }
+        break;
+    case GFX_ALPHA_BLENDING:
+        break;
     }
+    //for (i = miny; i < maxy; ++i) {
+    //    k0 = i * dest->pitch;
+    //    k1 = (i % src->height)  * src->pitch;
+    //    for (j = minx; j < maxx; ++j) {
+    //        uint32_t c = src->pixels4[k1 + (j  % src->width)];
+    //        dest->pixels4[k0 + j] = c;
+    //    }
+    //}
 }
 
-int gfx_blitmask(gfx_t* dest, gfx_t* src, gfx_blendmode_t blend, gfx_t* mask)
+void gfx_blitmask(gfx_t* dest, gfx_t* src, gfx_blendmode_t blend, gfx_t* mask)
 {
     int i, j, k0, k1;
     int minx = 0;
@@ -165,31 +178,23 @@ int gfx_blitmask(gfx_t* dest, gfx_t* src, gfx_blendmode_t blend, gfx_t* mask)
             dest->pixels4[k0 + j] = c;
         }
     }
+
+    ((void)blend);
+    ((void)mask);
 }
 
-int gfx_transform(gfx_t* dest, gfx_t* src, gfx_blendmode_t blend, gfx_clip_t* clip, float* matrix)
+void gfx_transform(gfx_t* dest, gfx_t* src, gfx_blendmode_t blend, gfx_clip_t* clip, float* matrix)
 {
-
+    ((void)dest);
+    ((void)src);
+    ((void)blend);
+    ((void)clip);
+    ((void)matrix);
 }
 
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-#include <stdio.h>
-
-void gfx_loop(gfx_t* gfx, void* arg)
-{
-    gfx_seat_t seat;
-    gfx_msg_t msg;
-    memset(&seat, 0, sizeof(seat));
-    for (;;) {
-        gfx_poll(gfx, &msg);
-        if (msg.message != GFX_EV_TIMER)
-            printf(" -%20x \n", msg.message);
-        if (msg.message == GFX_EV_QUIT)
-            return 0;
-    }
-}
 
 int gfx_handle(gfx_t* gfx, gfx_msg_t *msg, gfx_seat_t *seat)
 {
@@ -230,7 +235,7 @@ int gfx_handle(gfx_t* gfx, gfx_msg_t *msg, gfx_seat_t *seat)
         gfx->width = msg->param1 >> 16;
         gfx->height = msg->param1 & 0xffff;
         break;
-    case GFX_EV_DELAY: 
+    case GFX_EV_DELAY:
         ts.tv_sec = msg->param1 / 1000000;
         ts.tv_sec = msg->param1 % 1000000;
         thrd_sleep(&ts, NULL);
@@ -251,6 +256,7 @@ gfx_t* gfx_opend(int fd, int fi)
     gfx->fi = fi;
     gfx->pixels = NULL;
     gfx->backup = NULL;
+    gfx->pitch = gfx->width * 4;
     gfx->flags = GFX_FL_PAINTTICK | GFX_FL_INVALID;
     return gfx;
 }
@@ -260,3 +266,54 @@ void gfx_invalid(gfx_t* gfx)
     gfx->flags |= GFX_FL_INVALID;
 }
 
+
+
+int gfx_resize(gfx_t* gfx, int width, int height)
+{
+    gfx_unmap(gfx);
+    if (gfx->fd != -1)
+        return -1;
+    gfx->pitch = width * 4;
+    gfx->width = width;
+    gfx->height = height;
+    return 0;
+}
+
+
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
+
+
+int gfx_load_image_bmp(gfx_t* gfx, int fd);
+int gfx_load_image_png(gfx_t* gfx, int fd);
+
+#ifndef O_BINARY
+#  define O_BINARY  0
+#endif
+
+gfx_t* gfx_load_image(const char* name)
+{
+    int res = -1;
+    gfx_t* gfx = calloc(1, sizeof(gfx_t));
+    if (gfx == NULL)
+        return NULL;
+    gfx->fd = -1;
+    gfx->fi = -1;
+    int fd = open(name, O_RDONLY | O_BINARY);
+    if (fd == -1)
+        return NULL;
+
+    if (strcmp(&name[strlen(name) - strlen(".bmp")], ".bmp") == 0) {
+        res = gfx_load_image_bmp(gfx, fd);
+    }
+#ifdef __GFX_PNG
+    else if (strcmp(&name[strlen(name) - strlen(".png")], ".png") == 0) {
+        res = gfx_load_image_png(gfx, fd);
+    }
+#endif
+    close(fd);
+    if (res < 0) {
+        free(gfx);
+        gfx = NULL;
+    }
+    return gfx;
+}

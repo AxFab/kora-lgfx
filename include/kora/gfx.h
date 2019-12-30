@@ -1,5 +1,24 @@
-#ifndef __GFX_H
-#define __GFX_H 1
+/*
+ *      This file is part of the KoraOS project.
+ *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *   - - - - - - - - - - - - - - -
+ */
+#ifndef _KORA_GFX_H
+#define _KORA_GFX_H 1
 
 #include <stddef.h>
 #include <stdint.h>
@@ -112,12 +131,12 @@ LIBAPI int gfx_unmap(gfx_t *gfx);
 
 /* Drawing operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-LIBAPI int gfx_fill(gfx_t *dest, uint32_t color, gfx_blendmode_t blend, gfx_clip_t* clip);
-LIBAPI int gfx_blit(gfx_t *dest, gfx_t *src, gfx_blendmode_t blend, gfx_clip_t* clip);
-LIBAPI int gfx_blitmask(gfx_t *dest, gfx_t *src, gfx_blendmode_t blend, gfx_t* mask);
-LIBAPI int gfx_transform(gfx_t *dest, gfx_t *src, gfx_blendmode_t blend, gfx_clip_t* clip, float* matrix);
+LIBAPI void gfx_fill(gfx_t *dest, uint32_t color, gfx_blendmode_t blend, gfx_clip_t* clip);
+LIBAPI void gfx_blit(gfx_t *dest, gfx_t *src, gfx_blendmode_t blend, gfx_clip_t* clip);
+LIBAPI void gfx_blitmask(gfx_t *dest, gfx_t *src, gfx_blendmode_t blend, gfx_t* mask);
+LIBAPI void gfx_transform(gfx_t *dest, gfx_t *src, gfx_blendmode_t blend, gfx_clip_t* clip, float* matrix);
 
-LIBAPI int gfx_stretch(gfx_t *dest, gfx_t *src, gfx_blendmode_t blend, gfx_clip_t* clip, float scalex, float scaley);
+LIBAPI void gfx_stretch(gfx_t *dest, gfx_t *src, gfx_blendmode_t blend, gfx_clip_t* clip, float scalex, float scaley);
 
 
 /* Event operations
@@ -143,6 +162,7 @@ LIBAPI int gfx_handle(gfx_t* gfx, gfx_msg_t* msg, gfx_seat_t* seat);
 LIBAPI gfx_t* gfx_opend(int fd, int fi);
 LIBAPI int gfx_push_msg(gfx_t* gfx, int type, int param);
 LIBAPI void gfx_invalid(gfx_t* gfx);
-void gfx_loop(gfx_t* gfx, void* arg);
 
-#endif  /* __GFX_H */
+LIBAPI gfx_t* gfx_load_image(const char* name);
+
+#endif  /* _KORA_GFX_H */

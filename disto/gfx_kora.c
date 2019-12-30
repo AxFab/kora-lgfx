@@ -3,15 +3,20 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
+#include <sys/mman.h>
 
 int window(int service, int width, int height, int flags);
 
 void clipboard_copy(const char *buf, int len)
 {
+    ((void)buf);
+    ((void)len);
 }
 
 int clipboard_paste(char *buf, int len)
 {
+    ((void)buf);
+    ((void)len);
     return 0;
 }
 
@@ -31,6 +36,8 @@ gfx_t *gfx_create_window(void *ctx, int width, int height, int flag)
         return NULL;
     }
 
+    ((void)ctx);
+    ((void)flag);
     return gfx;
 }
 
@@ -64,14 +71,15 @@ int gfx_unmap(gfx_t *gfx)
 }
 
 
-void gfx_flip(gfx_t *gfx)
+int gfx_flip(gfx_t *gfx)
 {
     if (gfx->pixels == NULL)
-        return;
+        return -1;
     fcntl(gfx->fd, 800/* FD_WFLIP */, 5, gfx->pixels, gfx->backup);
     uint8_t *tmp = gfx->backup;
     gfx->backup = gfx->pixels;
     gfx->pixels = tmp;
+    return 0;
 }
 
 int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
@@ -79,8 +87,8 @@ int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
     char tmp[120];
     for (;;) {
         if (read(gfx->fi, (char *)msg, sizeof(*msg)) != 0) {
-            if (msg->message != EV_TIMER) {
-                snprintf(tmp, 120, "Event recv <%d:%x.%x>", msg->message, msg->param1, msg->param2);
+            if (msg->message != GFX_EV_TIMER) {
+                // snprintf(tmp, 120, "Event recv <%d:%x.%x>", msg->message, msg->param1, msg->param2);
                 write(1, tmp, strlen(tmp));
             }
             return 0;

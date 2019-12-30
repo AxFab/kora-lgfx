@@ -60,9 +60,9 @@ static void gfx_parse_key(int fd, char *buf)
 
     if (lm == '+') {
         if (md == 'C')
-            gfx_post(fd, EV_KEYDOWN, 0x1d, 0);
+            gfx_post(fd, GFX_EV_KEYDOWN, 0x1d, 0);
         else if (md == 'S')
-            gfx_post(fd, EV_KEYDOWN, 0x2a, 0);
+            gfx_post(fd, GFX_EV_KEYDOWN, 0x2a, 0);
         ch = buf[2];
     } else if (lm == '!') {
         if (md == 'e')
@@ -73,15 +73,15 @@ static void gfx_parse_key(int fd, char *buf)
 
     int key = rev[ch];
     if (key != 0) {
-        gfx_post(fd, EV_KEYDOWN, key, 0);
-        gfx_post(fd, EV_KEYUP, key, 0);
+        gfx_post(fd, GFX_EV_KEYDOWN, key, 0);
+        gfx_post(fd, GFX_EV_KEYUP, key, 0);
     }
 
     if (lm == '+') {
         if (md == 'C')
-            gfx_post(fd, EV_KEYUP, 0x1d, 0);
+            gfx_post(fd, GFX_EV_KEYUP, 0x1d, 0);
         else if (md == 'S')
-            gfx_post(fd, EV_KEYUP, 0x2a, 0);
+            gfx_post(fd, GFX_EV_KEYUP, 0x2a, 0);
     }
 }
 
@@ -104,11 +104,11 @@ static void gfx_read_events(int *fds)
         if (strncmp(buf, "KEY ", 4) == 0)
             gfx_parse_key(fds[0], &buf[4]);
         else if (strncmp(buf, "QUIT", 4) == 0 || strcmp(buf, "q") == 0)
-            gfx_post(fds[0], EV_QUIT, 0, 0);
+            gfx_post(fds[0], GFX_EV_QUIT, 0, 0);
         else if (strncmp(buf, "TIMER", 5) == 0 || strcmp(buf, "t") == 0)
-            gfx_post(fds[0], EV_TIMER, 0, 0);
+            gfx_post(fds[0], GFX_EV_TIMER, 0, 0);
         else if (strncmp(buf, "DELAY", 5) == 0)
-            gfx_post(fds[0], EV_DELAY, 500000, 0);
+            gfx_post(fds[0], GFX_EV_DELAY, 500000, 0);
         idx = (++n) - buf;
         memmove(buf, n, cap - idx);
         idx = cap - idx;
