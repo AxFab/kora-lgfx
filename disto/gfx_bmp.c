@@ -9,10 +9,14 @@
 
 void clipboard_copy(const char *buf, int len)
 {
+    ((void)buf);
+    ((void)len);
 }
 
 int clipboard_paste(char *buf, int len)
 {
+    ((void)buf);
+    ((void)len);
     return 0;
 }
 
@@ -122,7 +126,7 @@ static void gfx_read_events(int *fds)
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-gfx_t *gfx_create_window(void *ctx, int width, int height, int flag)
+gfx_t *gfx_create_window(void *ctx, int width, int height, int flags)
 {
     gfx_t *gfx = calloc(sizeof(gfx_t), 1);
     gfx->width = width;
@@ -138,6 +142,8 @@ gfx_t *gfx_create_window(void *ctx, int width, int height, int flag)
 
     thrd_t thrd;
     thrd_create(&thrd, (thrd_start_t)gfx_read_events, p3);
+    ((void)ctx);
+    ((void)flags);
     return gfx;
 }
 
@@ -216,11 +222,12 @@ int gfx_export_bmp24(const char *name, gfx_t *gfx)
 }
 
 
-void gfx_flip(gfx_t *gfx)
+int gfx_flip(gfx_t *gfx)
 {
     if (gfx->pixels == NULL)
-        return;
+        return -1;
     gfx_export_bmp24("win.bmp", gfx);
+    return 0;
 }
 
 int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)

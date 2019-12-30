@@ -25,7 +25,7 @@ int clipboard_paste(char *buf, int len)
 
 const char *pipe_name = "";
 
-gfx_t *gfx_create_window(void *ctx, int width, int height, int flag)
+gfx_t *gfx_create_window(void *ctx, int width, int height, int flags)
 {
     gfx_t *gfx = calloc(sizeof(gfx_t), 1);
     gfx->width = width;
@@ -37,7 +37,7 @@ gfx_t *gfx_create_window(void *ctx, int width, int height, int flag)
     }
 
     ((void)ctx);
-    ((void)flag);
+    ((void)flags);
     return gfx;
 }
 

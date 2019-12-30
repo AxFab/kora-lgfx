@@ -7,37 +7,19 @@
 
 void clipboard_copy(const char *buf, int len)
 {
+    ((void)buf);
+    ((void)len);
 }
 
 int clipboard_paste(char *buf, int len)
 {
+    ((void)buf);
+    ((void)len);
     return 0;
 }
 
-int __exec(char *name, const char **argv, const char **env, int fds[3])
-{
-    int i;
-    int argc = 0;
-    char cmdline[4096];
 
-    while (argv[argc])
-        ++argc;
-
-    strncpy(cmdline, name, 4096);
-    for (i = 0; i < argc; ++i) {
-        strncat(cmdline, " ", 4096);
-        strncat(cmdline, argv[i], 4096);
-    }
-
-    int pid = fork();
-    if (pid != 0)
-        return pid;
-
-    exit(-1);
-}
-
-
-/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
 struct xwin {
     Display *display;
@@ -70,6 +52,8 @@ gfx_t *gfx_create_window(void *ctx, int width, int height, int flags)
     XSelectInput(wi->display, wi->window, ExposureMask | KeyPressMask | KeyReleaseMask);
     XMapWindow(wi->display, wi->window);
     wi->gc = XDefaultGC(wi->display, wi->screen);
+    ((void)ctx);
+    ((void)flags);
     return gfx;
 }
 
@@ -96,10 +80,11 @@ int gfx_unmap(gfx_t *gfx)
     return 0;
 }
 
-void gfx_flip(gfx_t *gfx)
+int gfx_flip(gfx_t *gfx)
 {
     struct xwin *wi = (struct xwin *)gfx->fd;
     XPutImage(wi->display, wi->window, wi->gc, wi->img, 0, 0, 0, 0, gfx->width, gfx->height);
+    return 0;
 }
 
 int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
