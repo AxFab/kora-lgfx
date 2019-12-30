@@ -26,17 +26,22 @@ has_threads ?= $(shell $(topdir)/var/make/compiler.sh '__STDC_VERSION__ >= 20111
 
 include $(topdir)/var/make/build.mk
 
-SRCS-y += $(wildcard $(srcdir)/*.c)
+SRCS-y += $(srcdir)/gfx.c
+SRCS-y += $(wildcard $(srcdir)/codec/*.c)
+SRCS-y += $(wildcard $(srcdir)/keyboard/*.c)
 SRCS-y += $(srcdir)/disto/gfx_$(DISTO).c
 
 CFLAGS ?= -Wall -Wextra -ggdb
 CFLAGS += -fPIC -I $(topdir)/include
+
+LFLAGS += -lpng
 
 ifeq ($(has_threads),n)
 SRCS- += $(srcdir)/threads/threds_posix.c
 CFLAGS += -I $(topdir)/threads
 LFLAGS += -lpthread
 endif
+
 
 ifeq ($(DISTO),x11)
 LFLAGS += -lX11
