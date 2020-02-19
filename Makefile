@@ -17,24 +17,27 @@
 topdir ?= $(shell readlink -f $(dir $(word 1,$(MAKEFILE_LIST))))
 gendir ?= $(shell pwd)
 
-include $(topdir)/var/make/global.mk
+include $(topdir)/make/global.mk
 
 all: libgfx
 
 DISTO ?= kora
-has_threads ?= $(shell $(topdir)/var/make/compiler.sh '__STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__' gcc)
+has_threads ?= $(shell $(topdir)/make/compiler.sh '__STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__' gcc)
 
-include $(topdir)/var/make/build.mk
+include $(topdir)/make/build.mk
 
 SRCS-y += $(srcdir)/gfx.c
-SRCS-y += $(wildcard $(srcdir)/codec/*.c)
+SRCS-y += $(srcdir)/codec/codec_bmp.c
+SRCS-$(havepng) += $(srcdir)/codec/code_png.c)
 SRCS-y += $(wildcard $(srcdir)/keyboard/*.c)
 SRCS-y += $(srcdir)/disto/gfx_$(DISTO).c
 
 CFLAGS ?= -Wall -Wextra -ggdb
 CFLAGS += -fPIC -I $(topdir)/include
 
+ifeq ($(havepng),y)
 LFLAGS += -lpng
+endif
 
 ifeq ($(has_threads),n)
 SRCS- += $(srcdir)/threads/threds_posix.c
@@ -55,8 +58,11 @@ FLCP += $(topdir)/include/kora/gfx.h
 
 pack ?= lgfx-$(DISTO)-$(GIT_V)
 
-include $(topdir)/var/make/install.mk
-include $(topdir)/var/make/check.mk
+include $(topdir)/make/check.mk
+
+show-install:
+	@ echo $(call fn_inst,$(BINS) $(LIBS))
+install: $(call fn_inst,$(BINS) $(LIBS))
 
 ifeq ($(NODEPS),)
 include $(call fn_deps,SRCS-y)

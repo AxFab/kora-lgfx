@@ -15,9 +15,12 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+#  This makefile is more or less generic.
+#  The configuration is on `sources.mk`.
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 # Parse first argument if provided
-if [ -n $1 ]; then
+if [ -n "$1" ]; then
     IFS='-' read -ra THST <<< "$1"
     arch=${THST[0]}
     vendor=${THST[1]}
@@ -48,7 +51,7 @@ case "$arch" in
         vendor=phone
         ;;
     *)
-        echo "Unsupported architecture: $arch" >&2
+        echo "Unsupported architecture" >&2
         exit 1
         ;;
 esac

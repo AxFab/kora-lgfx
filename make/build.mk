@@ -55,6 +55,7 @@ $(1): $(bindir)/$(1)
 install-$(1): $(prefix)/bin/$(1)
 $(bindir)/$(1): $(call fn_objs,$(2)-y)
 	$(S) mkdir -p $$(dir $$@)
+	$(Q) echo "    LD  $$@"
 	$(V) $(LDC) -o $$@ $$^ $($(3))
 endef
 
@@ -63,23 +64,15 @@ clean:
 	$(V) rm -rf $(libdir)
 	$(V) rm -rf $(bindir)
 
-
 $(prefix)/lib/%: $(libdir)/%
 	$(S) mkdir -p $(dir $@)
-	$(Q) echo "    INSTALL $@"
+	$(Q) echo "    INSTALL  $@"
 	$(V) $(INSTALL) $< $@
 
 $(prefix)/bin/%: $(bindir)/%
 	$(S) mkdir -p $(dir $@)
-	$(Q) echo "    INSTALL $@"
+	$(Q) echo "    INSTALL  $@"
 	$(V) $(INSTALL) $< $@
-
-ifneq ($(prefix),$(topdir))
-$(prefix)/%: $(topdir)/%
-	$(S) mkdir -p $(dir $@)
-	$(Q) echo "    CP  $@"
-	$(V) cp $< $@
-endif
 
 
 .PHONY: clean
