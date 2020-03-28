@@ -304,8 +304,10 @@ gfx_t* gfx_load_image(const char* name)
 
     if (strcmp(&name[strlen(name) - strlen(".bmp")], ".bmp") == 0) {
         res = gfx_load_image_bmp(gfx, fd);
+#if defined __USE_PNG
     } else if (strcmp(&name[strlen(name) - strlen(".png")], ".png") == 0) {
         res = gfx_load_image_png(gfx, fd);
+#endif
     }
     close(fd);
     if (res < 0) {

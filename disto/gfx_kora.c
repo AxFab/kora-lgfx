@@ -82,13 +82,22 @@ int gfx_flip(gfx_t *gfx)
     return 0;
 }
 
+gfx_msg_t msg_pool[8];
+int msg_ptr = 0;
+
 int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
 {
     char tmp[120];
+    if (msg_ptr > 0) {
+        msg_ptr--;
+        memcpy(msg, &msg_pool[msg_ptr], sizeof(*msg));
+        snprintf(tmp, 120, "Event recv <%d:%x.%x>", msg->message, msg->param1, msg->param2);
+        return 0;
+    }
     for (;;) {
         if (read(gfx->fi, (char *)msg, sizeof(*msg)) != 0) {
             if (msg->message != GFX_EV_TIMER) {
-                // snprintf(tmp, 120, "Event recv <%d:%x.%x>", msg->message, msg->param1, msg->param2);
+                snprintf(tmp, 120, "Event recv <%d:%x.%x>", msg->message, msg->param1, msg->param2);
                 write(1, tmp, strlen(tmp));
             }
             return 0;
@@ -96,3 +105,14 @@ int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
     }
 }
 
+
+int gfx_push_msg(gfx_t* gfx, int type, int param)
+{
+    gfx_msg_t msg;
+    msg.message = type;
+    msg.param1 = param;
+    memcpy(&msg_pool[msg_ptr], &msg, sizeof(msg));
+    msg_ptr++;
+    // write(gfx->fi, (char*)&msg, sizeof(msg));
+    return 0;
+}

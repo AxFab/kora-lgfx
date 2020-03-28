@@ -36,6 +36,7 @@ CFLAGS ?= -Wall -Wextra -ggdb
 CFLAGS += -fPIC -I $(topdir)/include
 
 ifeq ($(havepng),y)
+CFLAGS += -D__USE_PNG
 LFLAGS += -lpng
 endif
 
@@ -60,8 +61,6 @@ pack ?= lgfx-$(DISTO)-$(GIT_V)
 
 include $(topdir)/make/check.mk
 
-show-install:
-	@ echo $(call fn_inst,$(BINS) $(LIBS))
 install: $(call fn_inst,$(BINS) $(LIBS))
 
 ifeq ($(NODEPS),)
