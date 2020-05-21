@@ -50,7 +50,7 @@ endif
 ifeq ($(DISTO),x11)
 LFLAGS += -lX11
 else ifeq ($(DISTO),kora)
-CFLAGS += -Dmain=_main
+CFLAGS += -Dmain=_main -D_GNU_SOURCE
 endif
 
 $(eval $(call link_shared,gfx,SRCS,LFLAGS))
