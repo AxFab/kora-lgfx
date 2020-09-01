@@ -214,5 +214,81 @@ void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, gfx_clip_t* clip)
     }
 }
 
-// void gfx_blit_scale(gfx_t* dst, gfx_t* src, gfx_blend_t blend, gfx_clip_t* clip_dst, gfx_clip_t* clip_src)
+
+#include <math.h>
+
+void gfx_blit_scale(gfx_t* dst, gfx_t* src, gfx_blend_t blend, gfx_clip_t* clip_dst, gfx_clip_t* clip_src)
+{
+    gfx_clip_t dc;
+    if (clip_dst)
+        dc = *clip_dst;
+    else {
+        dc.left = 0;
+        dc.right = dst->width;
+        dc.top = 0;
+        dc.bottom = dst->height;
+    }
+    gfx_clip_t sc;
+    if (clip_src)
+        sc = *clip_src;
+    else {
+        sc.left = 0;
+        sc.right = src->width;
+        sc.top = 0;
+        sc.bottom = src->height;
+    }
+
+    int minx = dc.left;
+    int maxx = dc.right;
+    int miny = dc.top;
+    int maxy = dc.bottom;
+    int i, j, s, t;
+
+    float rx = (float)(sc.right - sc.left) / (dc.right - dc.left);
+    float ry = (float)(sc.bottom - sc.top) / (dc.bottom - dc.top);
+    float dx = 0;
+    float dy = 0;
+
+    for (i = miny; i < maxy; ++i) {
+        int k0 = i * dst->width;
+        float ny = ry * i + dy;
+        float my = ry * (i+1) + dy;
+        for (j = minx; j < maxx; ++j) {
+            uint32_t* D = &dst->pixels4[k0 + (minx + j)];
+            float R = 0;
+            float G = 0;
+            float B = 0;
+
+            float sm = 0;
+            float nx = rx * j + dx;
+            float mx = rx * (j + 1) + dx;
+
+            for (t = floor(ny); t < ceil(my); ++t) {
+                for (s = floor(nx); s < ceil(mx); ++s) {
+                    float r = 1;
+
+                    if (t == floor(ny))
+                        r *= 1.0f - (ny - floor(ny));
+                    else if (t + 1.f == ceil(my))
+                        r *= my - (float)t;
+
+                    if (s == floor(nx))
+                        r *= 1.0f - (nx - floor(nx));
+                    else if (s + 1.f == ceil(mx))
+                        r *= mx - (float)s;
+
+                    uint32_t V = src->pixels4[t * src->width + s];
+                    R += GFX_RED(V) * r;
+                    G += GFX_GREEN(V) * r;
+                    B += GFX_BLUE(V) * r;
+                    sm += r;
+                }
+            }
+
+            uint32_t S = GFX_RGB(0xff, (int)(R / sm), (int)(G / sm), (int)(B / sm));
+            *D = S;
+        }
+    }
+}
+
 // void gfx_blit_transform(gfx_t *dst, gfx_t* src, gfx_blend_t blend, gfx_clip_t* clip, float *matrix);

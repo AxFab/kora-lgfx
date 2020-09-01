@@ -104,7 +104,7 @@ int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
 }
 
 
-int gfx_push_msg(gfx_t* gfx, int type, int param)
+int gfx_push(gfx_t* gfx, int type, int param)
 {
     (void)gfx; // TODO -- WRITE ON PIPE!!
     gfx_msg_t msg;

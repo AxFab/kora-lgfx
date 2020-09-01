@@ -9,7 +9,7 @@
 #define EMULATED_THREADS_H_INCLUDED_
 
 #include <time.h>
-#include <kora/mcrs.h>
+#include "../mcrs.h"
 
 #if defined(_WIN32) && defined(_MSC_VER)
 #include <windows.h>

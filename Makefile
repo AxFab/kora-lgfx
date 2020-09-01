@@ -62,8 +62,8 @@ include $(topdir)/make/check.mk
 
 install: $(call fn_inst,$(BINS) $(LIBS))
 	@ mkdir -p $(prefix)/include
-	@ cp $(topdir)/include/gfx.h $(prefix)/include/gfx.h
-	@ cp $(topdir)/include/keycodes.h $(prefix)/include/keycodes.h
+	@ cp $(topdir)/gfx.h $(prefix)/include/gfx.h
+	@ cp $(topdir)/keycodes.h $(prefix)/include/keycodes.h
 
 ifeq ($(NODEPS),)
 include $(call fn_deps,SRCS-y)
