@@ -1,8 +1,8 @@
-#include <kora/gfx.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <png.h>
+#include "../gfx.h"
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 

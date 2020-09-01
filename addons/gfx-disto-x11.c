@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <kora/gfx.h>
+#include "../gfx.h"
 
 void clipboard_copy(const char *buf, int len)
 {

@@ -26,14 +26,13 @@ has_threads ?= $(shell $(topdir)/make/compiler.sh '__STDC_VERSION__ >= 201112 &&
 
 include $(topdir)/make/build.mk
 
-SRCS-y += $(srcdir)/gfx.c
-SRCS-y += $(srcdir)/codec/codec_bmp.c
-SRCS-$(havepng) += $(srcdir)/codec/code_png.c)
-SRCS-y += $(wildcard $(srcdir)/keyboard/*.c)
-SRCS-y += $(srcdir)/disto/gfx_$(DISTO).c
+SRCS-y += $(wildcard $(srcdir)/*.c)
+SRCS-y += $(srcdir)/addons/gfx-disto-$(DISTO).c
+SRCS-$(havepng) += $(srcdir)/addons/gfx-png.c
 
 CFLAGS ?= -Wall -Wextra -ggdb
-CFLAGS += -fPIC -I $(topdir)/include
+CFLAGS += -fPIC
+# LFLAGS ?= -Wl,-z,defs
 
 ifeq ($(havepng),y)
 CFLAGS += -D__USE_PNG
@@ -62,6 +61,9 @@ pack ?= lgfx-$(DISTO)-$(GIT_V)
 include $(topdir)/make/check.mk
 
 install: $(call fn_inst,$(BINS) $(LIBS))
+	@ mkdir -p $(prefix)/include
+	@ cp $(topdir)/include/gfx.h $(prefix)/include/gfx.h
+	@ cp $(topdir)/include/keycodes.h $(prefix)/include/keycodes.h
 
 ifeq ($(NODEPS),)
 include $(call fn_deps,SRCS-y)

@@ -1,8 +1,10 @@
-#include <kora/gfx.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include "gfx.h"
+#include "mcrs.h"
+
 
 PACK(struct bmp_header {
     uint16_t magic;
@@ -27,7 +29,7 @@ PACK(struct bmp_header {
 static int gfx_read_bmp8(gfx_t* gfx, int fd)
 {
     int c, x, y = gfx->height;
-    int r = gfx->pitch % 4;
+    int r = gfx->width % 4;
     while (y-- > 0) {
         for (x = 0; x < gfx->width; ++x) {
             c = 0;
@@ -44,7 +46,7 @@ static int gfx_read_bmp8(gfx_t* gfx, int fd)
 static int gfx_read_bmp15(gfx_t* gfx, int fd)
 {
     int c, x, y = gfx->height;
-    int r = gfx->pitch % 4;
+    int r = gfx->width % 4;
     while (y-- > 0) {
         for (x = 0; x < gfx->width; ++x) {
             c = 0;
@@ -61,7 +63,7 @@ static int gfx_read_bmp15(gfx_t* gfx, int fd)
 static int gfx_read_bmp16(gfx_t* gfx, int fd)
 {
     int c, x, y = gfx->height;
-    int r = gfx->pitch % 4;
+    int r = gfx->width % 4;
     while (y-- > 0) {
         for (x = 0; x < gfx->width; ++x) {
             c = 0;
@@ -78,10 +80,12 @@ static int gfx_read_bmp16(gfx_t* gfx, int fd)
 static int gfx_read_bmp24(gfx_t* gfx, int fd)
 {
     int x, y = gfx->height;
-    int r = gfx->pitch % 4;
+    int r = gfx->width % 4;
     while (y-- > 0) {
-        for (x = 0; x < gfx->width; ++x)
+        for (x = 0; x < gfx->width; ++x) {
+            gfx->pixels4[y * gfx->width + x] = 0;
             read(fd, &gfx->pixels4[y * gfx->width + x], 3);
+        }
         if (r != 0)
             read(fd, &x, r);
     }

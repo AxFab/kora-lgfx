@@ -1,11 +1,11 @@
-#include <kora/gfx.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
-#include <threads.h>
+#include <threads.h> // TODO -- "" or <>
+#include "../gfx.h"
 
 void clipboard_copy(const char *buf, int len)
 {

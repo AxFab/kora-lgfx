@@ -1,13 +1,14 @@
-#include <kora/gfx.h>
+#include "../gfx.h"
 #include <stdio.h>
 #include <windows.h>
 #include <tchar.h>
+#include "../mcrs.h"
 
 #define COLOR_REF(n)  ( (((n) & 0xFF0000) >> 16) | ((n) & 0xFF00) | (((n) & 0xFF) << 16) )
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-void clipboard_copy(const char *buf, int len)
+void gfx_clipboard_copy(const char *buf, int len)
 {
     HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
     memcpy(GlobalLock(hMem), buf, len);
@@ -18,7 +19,7 @@ void clipboard_copy(const char *buf, int len)
     CloseClipboard();
 }
 
-int clipboard_paste(char *buf, int len)
+int gfx_clipboard_paste(char *buf, int len)
 {
     OpenClipboard(0);
     HGLOBAL hMem = GetClipboardData(CF_TEXT);
@@ -121,77 +122,72 @@ static void gfx_painting(gfx_t *gfx, gfx_handlers_t *handlers, void *arg, gfx_se
 }*/
 
 
-gfx_t *gfx_create_window(void *ctx, int width, int height, int flag)
+int gfx_open_window(gfx_t* gfx)
 {
-    gfx_t *gfx = calloc(sizeof(gfx_t), 1);
-    gfx->width = width;
-    gfx->height = height;
-
     if (appInstance == NULL)
         gfx_win32_init_();
-    gfx->fd = (int)CreateWindowEx(WS_EX_CLIENTEDGE, szWindowClass, szTitle, WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, width + 16, height + 39, NULL, NULL, appInstance, NULL);
+    gfx->fd = (int)CreateWindowEx(WS_EX_CLIENTEDGE, szWindowClass, szTitle, WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, gfx->width + 16, gfx->height + 39, NULL, NULL, appInstance, NULL);
     if (gfx->fd == 0) {
         free(gfx);
-        return NULL;
+        return -1;
     }
 
     UINT timer;
     SetTimer((HWND)gfx->fd, (UINT_PTR)&timer, 25, NULL);
     gfx->flags = GFX_FL_PAINTTICK | GFX_FL_INVALID;
-    return gfx;
+    return 0;
 }
 
-void gfx_destroy(gfx_t* gfx)
+int gfx_close_window(gfx_t* gfx)
 {
     DestroyWindow((HWND)gfx->fd);
     if (gfx->pixels)
         _aligned_free(gfx->pixels);
-    free(gfx);
-}
-
-void gfx_close(gfx_t* gfx)
-{
-    DestroyWindow((HWND)gfx->fd);
-    if (gfx->pixels)
-        _aligned_free(gfx->pixels);
-    free(gfx);
+    return 0;
 }
 
 int gfx_flip(gfx_t* gfx)
 {
+    HWND hwnd = (HWND)gfx->fd;
+#if 1
     RECT r;
     r.left = 0;
     r.top = 0;
     r.right = gfx->width;
     r.bottom = gfx->height;
-    HWND hwnd = (HWND)gfx->fd;
     InvalidateRect(hwnd, &r, FALSE);
+#else
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hwnd, &ps);
+
+    HBITMAP backbuffer = CreateBitmap(gfx->width, gfx->height, 1, 32, gfx->pixels);
+    HDC backbuffDC = CreateCompatibleDC(hdc);
+    SelectObject(backbuffDC, backbuffer);
+    BitBlt(hdc, 0, 0, gfx->width, gfx->height, backbuffDC, 0, 0, SRCCOPY);
+    DeleteObject(backbuffer);
+    DeleteDC(backbuffDC);
+    EndPaint(hwnd, &ps);
+#endif
+    return 0;
 }
 
-int gfx_map(gfx_t *gfx)
+void gfx_map_window(gfx_t *gfx)
 {
     RECT rect;
-    if (gfx->pixels != NULL)
-        return 0;
-
-    if (gfx->fd != -1) {
-        if (GetClientRect((HWND)gfx->fd, &rect) == FALSE)
-            return -1;
+    if (GetClientRect((HWND)gfx->fd, &rect) != FALSE) {
         gfx->width = rect.right;
         gfx->height = rect.bottom;
         gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
     }
     gfx->pixels = _aligned_malloc(gfx->pitch * gfx->height, 1024 * 16);
-    return 0;
  }
 
-int gfx_unmap(gfx_t *gfx)
+void gfx_unmap_window(gfx_t *gfx)
 {
     if (gfx->pixels != NULL) {
         _aligned_free(gfx->pixels);
         gfx->pixels = NULL;
     }
-    return 0;
 }
 
 
@@ -283,17 +279,10 @@ int gfx_poll(gfx_t* gfx, gfx_msg_t* msg)
 }
 
 
-int gfx_push(gfx_t* gfx, int type)
-{
-}
-
-int gfx_push_msg(gfx_t* gfx, int type, int param)
+int gfx_push(gfx_t* gfx, int type, int param)
 {
     HWND hwnd = (HWND)gfx->fd;
     PostMessage(hwnd, WM_USER + 1, type, param);
-}
-
-int gfx_expose(gfx_t* gfx)
-{
+    return 0;
 }
 

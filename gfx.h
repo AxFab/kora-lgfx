@@ -17,14 +17,12 @@
  *
  *   - - - - - - - - - - - - - - -
  */
-#ifndef _KORA_GFX_H
-#define _KORA_GFX_H 1
+#ifndef _GFX_H
+#define _GFX_H 1
 
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <kora/mcrs.h>
-#include <kora/keys.h>
 
 #define _16x10(n)  ((n)/10*16)
 #define _16x9(n)  ((n)/9*16)
@@ -39,12 +37,12 @@
 
 #define GFX_ALPHA(c)  (((c) >> 24) & 0xff)
 #define GFX_RED(c)  (((c) >> 16) & 0xff)
-#define GFX_GREEN(c)  ((c) & 0xff)
-#define GFX_BLUE(c)  (((c) >> 8) & 0xff)
+#define GFX_GREEN(c)  (((c) >> 8) & 0xff)
+#define GFX_BLUE(c)  ((c) & 0xff)
 #define GFX_ARGB(a,r,g,b)  ((b & 0xff) | ((g & 0xff) << 8) | ((r & 0xff) << 16) | ((a & 0xff) << 24))
 #define GFX_RGB(a,r,g,b)  ((b & 0xff) | ((g & 0xff) << 8) | ((r & 0xff) << 16) | 0xff000000)
 
-typedef enum gfx_blendmode gfx_blendmode_t;
+typedef enum gfx_blend gfx_blend_t;
 typedef enum gfx_event gfx_event_t;
 typedef struct gfx gfx_t;
 typedef struct gfx_seat gfx_seat_t;
@@ -52,9 +50,11 @@ typedef struct gfx_msg gfx_msg_t;
 typedef struct gfx_clip gfx_clip_t;
 
 
-enum gfx_blendmode {
-    GFX_COPY_BLEND,
-    GFX_ALPHA_BLENDING
+enum gfx_blend {
+    GFX_NOBLEND, // Just copy the color
+    GFX_ALPHA_BLEND, // Full transparency support
+    GFX_UPPER_BLEND, // Source transparency only
+    GFX_CLRBLEND,
 };
 
 enum gfx_event {
@@ -64,17 +64,18 @@ enum gfx_event {
     GFX_EV_BTNDOWN,
     GFX_EV_KEYUP,
     GFX_EV_KEYDOWN,
+    GFX_EV_KEYPRESS,
     GFX_EV_MOUSEWHEEL,
     GFX_EV_TIMER,
     GFX_EV_RESIZE,
     GFX_EV_PAINT,
-    GFX_EV_UNICODE,
-    GFX_EV_DELAY = 128,
+    GFX_EV_DELAY = 127,
 };
 
 enum gfx_flags {
     GFX_FL_INVALID = (1 << 0),
     GFX_FL_PAINTTICK = (1 << 1),
+    GFX_FL_EXPOSED = (1 << 2),
 };
 
 struct gfx {
@@ -94,8 +95,13 @@ struct gfx {
 struct gfx_seat {
     int mouse_x;
     int mouse_y;
+    int rel_x;
+    int rel_y;
     int btn_status; // left, right, wheel, prev, next
     int kdb_status; // Shift, caps, ctrl, alt, home, num, defl !
+    int kdb_altkey;
+    int *kdb_layout;
+    int *kdb_alt_layout;
 };
 
 PACK(struct gfx_msg {
@@ -122,47 +128,67 @@ This surface can be a fix image, or a video stream (in/out) or a window (event),
 
 /* Surface operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-LIBAPI gfx_t* gfx_open(const char* name, int flags);
-LIBAPI gfx_t* gfx_create_window(void *ctx, int width, int height, int flags);
-LIBAPI void gfx_close(gfx_t *gfx);
-LIBAPI int gfx_map(gfx_t *gfx);
-LIBAPI int gfx_unmap(gfx_t *gfx);
+gfx_t* gfx_create_window(void* ctx, int width, int height);
+gfx_t* gfx_create_surface(int width, int height);
+void gfx_destroy(gfx_t* gfx);
+int gfx_resize(gfx_t* gfx, int width, int height);
+void* gfx_map(gfx_t* gfx);
+void gfx_unmap(gfx_t* gfx);
+int gfx_width(gfx_t* gfx);
+int gfx_height(gfx_t* gfx);
+
+
+gfx_t* gfx_open(const char* name, int flags);
+void gfx_close(gfx_t *gfx);
 
 
 /* Drawing operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-LIBAPI void gfx_fill(gfx_t *dest, uint32_t color, gfx_blendmode_t blend, gfx_clip_t* clip);
-LIBAPI void gfx_blit(gfx_t *dest, gfx_t *src, gfx_blendmode_t blend, gfx_clip_t* clip);
-LIBAPI void gfx_blitmask(gfx_t *dest, gfx_t *src, gfx_blendmode_t blend, gfx_t* mask);
-LIBAPI void gfx_transform(gfx_t *dest, gfx_t *src, gfx_blendmode_t blend, gfx_clip_t* clip, float* matrix);
 
-LIBAPI void gfx_stretch(gfx_t *dest, gfx_t *src, gfx_blendmode_t blend, gfx_clip_t* clip, float scalex, float scaley);
+void gfx_blit(gfx_t* dst, gfx_t* src, gfx_blend_t mode, gfx_clip_t* clip, gfx_clip_t* clip_src);
+void gfx_fill(gfx_t* dst, uint32_t color, gfx_blend_t mode, gfx_clip_t* clip);
+// void gfx_blit_scale(gfx_t *dst, gfx_t* src, gfx_blend_t mode, gfx_clip_t* clip_dst, gfx_clip_t* clip_src);
+// void gfx_blit_transform(gfx_t *dst, gfx_t* src, gfx_blend_t mode, gfx_clip_t* clip, float *matrix);
+
+uint32_t gfx_alpha_blend(uint32_t low, uint32_t upr);
+uint32_t gfx_upper_alpha_blend(uint32_t low, uint32_t upr);
 
 
 /* Event operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-LIBAPI int gfx_poll(gfx_t *gfx, gfx_msg_t *msg);
-LIBAPI int gfx_push(gfx_t *gfx, gfx_msg_t *msg);
-/* Send exposure only if visible */
-LIBAPI int gfx_expose(gfx_t *gfx, gfx_clip_t *clip);
+int gfx_poll(gfx_t *gfx, gfx_msg_t *msg);
+int gfx_push(gfx_t *gfx, int type, int param);
 /* Go to next frame */
-LIBAPI int gfx_flip(gfx_t *gfx);
-LIBAPI int gfx_resize(gfx_t *gfx, int width, int height);
+int gfx_flip(gfx_t *gfx);
+int gfx_resize(gfx_t *gfx, int width, int height);
 
 
 /* Helpers
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-LIBAPI void clipboard_copy(const char* buf, int len);
-LIBAPI int clipboard_paste(char* buf, int len);
+void gfx_clipboard_copy(const char* buf, int len);
+int gfx_clipboard_paste(char* buf, int len);
+void gfx_keyboard_load(gfx_seat_t* seat);
+int gfx_keyboard_down(int key, gfx_seat_t* seat, int* key2);
+int gfx_keyboard_up(int key, gfx_seat_t* seat);
 
-LIBAPI int keyboard_down(int key, int* status, int* key2);
-LIBAPI int keyboard_up(int key, int* status);
+int gfx_handle(gfx_t* gfx, gfx_msg_t* msg, gfx_seat_t* seat);
+gfx_t* gfx_opend(int fd, int fi);
+int gfx_push_msg(gfx_t* gfx, int type, int param);
+void gfx_invalid(gfx_t* gfx);
 
-LIBAPI int gfx_handle(gfx_t* gfx, gfx_msg_t* msg, gfx_seat_t* seat);
-LIBAPI gfx_t* gfx_opend(int fd, int fi);
-LIBAPI int gfx_push_msg(gfx_t* gfx, int type, int param);
-LIBAPI void gfx_invalid(gfx_t* gfx);
+gfx_t* gfx_load_image(const char* name);
 
-LIBAPI gfx_t* gfx_load_image(const char* name);
 
-#endif  /* _KORA_GFX_H */
+
+
+
+
+
+// Context
+
+void* gfx_open_framebuffer(const char *path);
+int gfx_fb_open_input(void *ctx, const char *path);
+
+
+
+#endif  /* _GFX_H */

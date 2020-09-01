@@ -1,9 +1,11 @@
-#include <kora/gfx.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/mman.h>
+#include "../gfx.h"
+#include "../mcrs.h"
+#include <stdio.h>
 
 int window(int service, int width, int height, int flags);
 
@@ -25,49 +27,45 @@ int clipboard_paste(char *buf, int len)
 
 const char *pipe_name = "";
 
-gfx_t *gfx_create_window(void *ctx, int width, int height, int flags)
+int gfx_open_window(gfx_t* gfx)
 {
-    gfx_t *gfx = calloc(sizeof(gfx_t), 1);
-    gfx->width = width;
-    gfx->height = height;
-    gfx->fd = window(0, width, height, 0);
-    if (gfx->fd == -1) {
-        free(gfx);
-        return NULL;
-    }
-
-    ((void)ctx);
-    ((void)flags);
-    return gfx;
-}
-
-void gfx_destroy(gfx_t *gfx)
-{
-    gfx_unmap(gfx);
-    close(gfx->fd);
-    free(gfx);
-}
-
-
-int gfx_map(gfx_t *gfx)
-{
-    (void)gfx->fi;
-    if (gfx->pixels != NULL)
-        return 0;
-    gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
-    gfx->pixels = mmap(NULL, 8 * _Mib_, 0x10002, 0, gfx->fd, 0);
-    gfx->backup = ADDR_OFF(gfx->pixels, gfx->pitch * gfx->height);
+    gfx->fd = window(0, gfx->width, gfx->height, 0);
+    gfx->fi = gfx->fd;
+    if (gfx->fd == -1)
+        return -1;
     return 0;
 }
 
-int gfx_unmap(gfx_t *gfx)
+int gfx_open_device(gfx_t* gfx, const char *path)
 {
-    if (gfx->pixels == NULL)
-        return 0;
-    munmap(MIN(gfx->pixels, gfx->backup), 8 * _Mib_);
+    gfx->fd = open(path, O_RDWR | O_DIRECT);
+    gfx->fi = gfx->fd;
+    if (gfx->fd == -1)
+        return -1;
+    return 0;
+}
+
+int gfx_close_window(gfx_t* gfx)
+{
+    close(gfx->fd);
+    if (gfx->fd != gfx->fi)
+        close(gfx->fi);
+    return 0;
+}
+
+void gfx_map_window(gfx_t *gfx)
+{
+    size_t lg = gfx->pitch * gfx->height * 2;
+    gfx->pixels = mmap(NULL, lg, 0x10002, 0, gfx->fd, 0);
+    gfx->backup = ADDR_OFF(gfx->pixels, gfx->pitch * gfx->height);
+}
+
+void gfx_unmap_window(gfx_t *gfx)
+{
+    size_t lg = gfx->pitch * gfx->height * 2;
+    munmap(MIN(gfx->pixels, gfx->backup), lg);
     gfx->pixels = NULL;
     gfx->backup = NULL;
-    return 0;
 }
 
 
@@ -108,6 +106,7 @@ int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
 
 int gfx_push_msg(gfx_t* gfx, int type, int param)
 {
+    (void)gfx; // TODO -- WRITE ON PIPE!!
     gfx_msg_t msg;
     msg.message = type;
     msg.param1 = param;
