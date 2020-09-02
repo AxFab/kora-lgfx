@@ -188,10 +188,13 @@ typedef enum
     KMOD_RCTRL = 0x008,
     KMOD_LALT = 0x010,
     KMOD_RALT = 0x020,
+    KMOD_ALTGR = KMOD_RALT,
     KMOD_LGUI = 0x040,
     KMOD_RGUI = 0x080,
     KMOD_NUM = 0x100,
     KMOD_CAPS = 0x200,
+    KMOD_HOST = KMOD_LGUI,
+    KMOD_SCROLL = 0x1000,
 } keymod_t;
 
 #define KMOD_CTRL   (KMOD_LCTRL|KMOD_RCTRL)

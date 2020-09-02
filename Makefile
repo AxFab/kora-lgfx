@@ -17,53 +17,60 @@
 topdir ?= $(shell readlink -f $(dir $(word 1,$(MAKEFILE_LIST))))
 gendir ?= $(shell pwd)
 
+PACKAGE=lgfx
 include $(topdir)/make/global.mk
-
-all: libgfx
-
-DISTO ?= kora
-has_threads ?= $(shell $(topdir)/make/compiler.sh '__STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__' gcc)
-
 include $(topdir)/make/build.mk
 
+
+disto ?= kora
+has_threads ?= $(shell $(topdir)/make/compiler.sh '__STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__' $(CC))
+use_png ?= $(shell $(PKC) --exists libpng && echo 'y')
+
+
+
 SRCS-y += $(wildcard $(srcdir)/*.c)
-SRCS-y += $(srcdir)/addons/gfx-disto-$(DISTO).c
-SRCS-$(havepng) += $(srcdir)/addons/gfx-png.c
+SRCS-y += $(srcdir)/addons/gfx-disto-$(disto).c
 
 CFLAGS ?= -Wall -Wextra -ggdb
 CFLAGS += -fPIC
-# LFLAGS ?= -Wl,-z,defs
 
-ifeq ($(havepng),y)
-CFLAGS += -D__USE_PNG
-LFLAGS += -lpng
+LFLAGS ?= -Wl,-z,defs
+LFLAGS += -lm
+
+
+
+ifeq ($(use_png),y)
+SRCS-y += $(srcdir)/addons/gfx-png.c
+CFLAGS += -D__USE_PNG $(shell $(PKC) --cflags libpng)
+LFLAGS += $(shell $(PKC) --libs libpng)
 endif
 
 ifeq ($(has_threads),n)
-SRCS- += $(srcdir)/threads/threds_posix.c
-CFLAGS += -I $(topdir)/threads
-LFLAGS += -lpthread
+SRCS-y += $(srcdir)/threads/threds_posix.c
+CFLAGS += -I $(topdir)/threads $(shell $(PKC) --cflags pthread)
+LFLAGS +=  $(shell $(PKC) --libs pthread)
 endif
 
-
-ifeq ($(DISTO),x11)
+ifeq ($(disto),x11)
 LFLAGS += -lX11
-else ifeq ($(DISTO),kora)
+else ifeq ($(disto),kora)
 CFLAGS += -Dmain=_main -D_GNU_SOURCE
 endif
 
+
 $(eval $(call link_shared,gfx,SRCS,LFLAGS))
 
-FLCP += $(topdir)/include/kora/gfx.h
 
-pack ?= lgfx-$(DISTO)-$(GIT_V)
+
 
 include $(topdir)/make/check.mk
+include $(topdir)/make/targets.mk
 
-install: $(call fn_inst,$(BINS) $(LIBS))
-	@ mkdir -p $(prefix)/include
-	@ cp $(topdir)/gfx.h $(prefix)/include/gfx.h
-	@ cp $(topdir)/keycodes.h $(prefix)/include/keycodes.h
+install-headers:
+	$(S) mkdir -p $(prefix)/include
+	$(S) cp -RpP -f $(topdir)/gfx.h $(prefix)/include/gfx.h
+	$(S) cp -RpP -f $(topdir)/keycodes.h $(prefix)/include/keycodes.h
+
 
 ifeq ($(NODEPS),)
 include $(call fn_deps,SRCS-y)

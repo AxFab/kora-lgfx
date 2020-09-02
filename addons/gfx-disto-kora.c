@@ -9,13 +9,13 @@
 
 int window(int service, int width, int height, int flags);
 
-void clipboard_copy(const char *buf, int len)
+void gfx_clipboard_copy(const char *buf, int len)
 {
     ((void)buf);
     ((void)len);
 }
 
-int clipboard_paste(char *buf, int len)
+int gfx_clipboard_paste(char *buf, int len)
 {
     ((void)buf);
     ((void)len);
