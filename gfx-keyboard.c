@@ -238,7 +238,7 @@ int gfx_keyboard_down(int key, gfx_seat_t *seat, int *key2)
         if (seat->kdb_alt_layout != NULL) {
             int i;
             for (i = 0; ; ++i) {
-                int* altkeys = &seat->kdb_alt_layout[i * 4];
+                int *altkeys = &seat->kdb_alt_layout[i * 4];
                 if (altkeys[0] == 0)
                     break;
                 if (altkeys[0] != ch || altkeys[1] != seat->kdb_altkey)

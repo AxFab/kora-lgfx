@@ -85,10 +85,10 @@ struct gfx {
     long fd;
     long fi;
     union {
-        uint8_t* pixels;
-        uint32_t* pixels4;
+        uint8_t *pixels;
+        uint32_t *pixels4;
     };
-    uint8_t* backup;
+    uint8_t *backup;
     int flags;
 };
 
@@ -128,25 +128,25 @@ This surface can be a fix image, or a video stream (in/out) or a window (event),
 
 /* Surface operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-gfx_t* gfx_create_window(void* ctx, int width, int height);
-gfx_t* gfx_create_surface(int width, int height);
-void gfx_destroy(gfx_t* gfx);
-int gfx_resize(gfx_t* gfx, int width, int height);
-void* gfx_map(gfx_t* gfx);
-void gfx_unmap(gfx_t* gfx);
-int gfx_width(gfx_t* gfx);
-int gfx_height(gfx_t* gfx);
+gfx_t *gfx_create_window(void *ctx, int width, int height);
+gfx_t *gfx_create_surface(int width, int height);
+void gfx_destroy(gfx_t *gfx);
+int gfx_resize(gfx_t *gfx, int width, int height);
+void *gfx_map(gfx_t *gfx);
+void gfx_unmap(gfx_t *gfx);
+int gfx_width(gfx_t *gfx);
+int gfx_height(gfx_t *gfx);
 
 
-gfx_t* gfx_open(const char* name, int flags);
+gfx_t *gfx_open(const char *name, int flags);
 void gfx_close(gfx_t *gfx);
 
 
 /* Drawing operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 
-void gfx_blit(gfx_t* dst, gfx_t* src, gfx_blend_t mode, gfx_clip_t* clip, gfx_clip_t* clip_src);
-void gfx_fill(gfx_t* dst, uint32_t color, gfx_blend_t mode, gfx_clip_t* clip);
+void gfx_blit(gfx_t *dst, gfx_t *src, gfx_blend_t mode, gfx_clip_t *clip, gfx_clip_t *clip_src);
+void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, gfx_clip_t *clip);
 // void gfx_blit_scale(gfx_t *dst, gfx_t* src, gfx_blend_t mode, gfx_clip_t* clip_dst, gfx_clip_t* clip_src);
 // void gfx_blit_transform(gfx_t *dst, gfx_t* src, gfx_blend_t mode, gfx_clip_t* clip, float *matrix);
 
@@ -165,18 +165,18 @@ int gfx_resize(gfx_t *gfx, int width, int height);
 
 /* Helpers
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-void gfx_clipboard_copy(const char* buf, int len);
-int gfx_clipboard_paste(char* buf, int len);
-void gfx_keyboard_load(gfx_seat_t* seat);
-int gfx_keyboard_down(int key, gfx_seat_t* seat, int* key2);
-int gfx_keyboard_up(int key, gfx_seat_t* seat);
+void gfx_clipboard_copy(const char *buf, int len);
+int gfx_clipboard_paste(char *buf, int len);
+void gfx_keyboard_load(gfx_seat_t *seat);
+int gfx_keyboard_down(int key, gfx_seat_t *seat, int *key2);
+int gfx_keyboard_up(int key, gfx_seat_t *seat);
 
-int gfx_handle(gfx_t* gfx, gfx_msg_t* msg, gfx_seat_t* seat);
-gfx_t* gfx_opend(int fd, int fi);
-int gfx_push_msg(gfx_t* gfx, int type, int param);
-void gfx_invalid(gfx_t* gfx);
+int gfx_handle(gfx_t *gfx, gfx_msg_t *msg, gfx_seat_t *seat);
+gfx_t *gfx_opend(int fd, int fi);
+int gfx_push_msg(gfx_t *gfx, int type, int param);
+void gfx_invalid(gfx_t *gfx);
 
-gfx_t* gfx_load_image(const char* name);
+gfx_t *gfx_load_image(const char *name);
 
 
 
@@ -186,7 +186,7 @@ gfx_t* gfx_load_image(const char* name);
 
 // Context
 
-void* gfx_open_framebuffer(const char *path);
+void *gfx_open_framebuffer(const char *path);
 int gfx_fb_open_input(void *ctx, const char *path);
 
 

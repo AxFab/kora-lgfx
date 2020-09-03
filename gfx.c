@@ -36,7 +36,7 @@ void gfx_destroy(gfx_t *gfx)
 }
 
 
-int gfx_resize(gfx_t* gfx, int width, int height)
+int gfx_resize(gfx_t *gfx, int width, int height)
 {
     gfx_unmap(gfx);
     if (gfx->fd != -1)
@@ -48,7 +48,7 @@ int gfx_resize(gfx_t* gfx, int width, int height)
 }
 
 
-void *gfx_map(gfx_t* gfx)
+void *gfx_map(gfx_t *gfx)
 {
     if (gfx->pixels == NULL) {
         if (gfx->fd != -1)
@@ -59,7 +59,7 @@ void *gfx_map(gfx_t* gfx)
     return gfx->pixels;
 }
 
-void gfx_unmap(gfx_t* gfx)
+void gfx_unmap(gfx_t *gfx)
 {
     if (gfx->pixels == NULL)
         return;
@@ -93,9 +93,9 @@ int gfx_height(gfx_t *gfx)
 #include <stdio.h>
 
 
-gfx_t* gfx_opend(int fd, int fi)
+gfx_t *gfx_opend(int fd, int fi)
 {
-    gfx_t* gfx = malloc(sizeof(gfx_t));
+    gfx_t *gfx = malloc(sizeof(gfx_t));
     gfx->width = 1280;
     gfx->height = 720;
     gfx->fd = fd;
@@ -113,17 +113,17 @@ gfx_t* gfx_opend(int fd, int fi)
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
 
-int gfx_load_image_bmp(gfx_t* gfx, int fd);
-int gfx_load_image_png(gfx_t* gfx, int fd);
+int gfx_load_image_bmp(gfx_t *gfx, int fd);
+int gfx_load_image_png(gfx_t *gfx, int fd);
 
 #ifndef O_BINARY
 #  define O_BINARY  0
 #endif
 
-gfx_t* gfx_load_image(const char* name)
+gfx_t *gfx_load_image(const char *name)
 {
     int res = -1;
-    gfx_t* gfx = calloc(1, sizeof(gfx_t));
+    gfx_t *gfx = calloc(1, sizeof(gfx_t));
     if (gfx == NULL)
         return NULL;
     gfx->fd = -1;

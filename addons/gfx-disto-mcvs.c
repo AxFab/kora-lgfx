@@ -122,7 +122,7 @@ static void gfx_painting(gfx_t *gfx, gfx_handlers_t *handlers, void *arg, gfx_se
 }*/
 
 
-int gfx_open_window(gfx_t* gfx)
+int gfx_open_window(gfx_t *gfx)
 {
     if (appInstance == NULL)
         gfx_win32_init_();
@@ -138,7 +138,7 @@ int gfx_open_window(gfx_t* gfx)
     return 0;
 }
 
-int gfx_close_window(gfx_t* gfx)
+int gfx_close_window(gfx_t *gfx)
 {
     DestroyWindow((HWND)gfx->fd);
     if (gfx->pixels)
@@ -146,7 +146,7 @@ int gfx_close_window(gfx_t* gfx)
     return 0;
 }
 
-int gfx_flip(gfx_t* gfx)
+int gfx_flip(gfx_t *gfx)
 {
     HWND hwnd = (HWND)gfx->fd;
 #if 1
@@ -180,7 +180,7 @@ void gfx_map_window(gfx_t *gfx)
         gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
     }
     gfx->pixels = _aligned_malloc(gfx->pitch * gfx->height, 1024 * 16);
- }
+}
 
 void gfx_unmap_window(gfx_t *gfx)
 {
@@ -191,7 +191,7 @@ void gfx_unmap_window(gfx_t *gfx)
 }
 
 
-int gfx_poll(gfx_t* gfx, gfx_msg_t* msg)
+int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
 {
     MSG wm;
     HWND hwnd = (HWND)gfx->fd;
@@ -246,23 +246,22 @@ int gfx_poll(gfx_t* gfx, gfx_msg_t* msg)
         case WM_TIMER:
             msg->message = GFX_EV_TIMER;
             break;
-        case WM_PAINT:
-            {
-                PAINTSTRUCT ps;
-                HDC hdc = BeginPaint(hwnd, &ps);
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
 
-                HBITMAP backbuffer = CreateBitmap(gfx->width, gfx->height, 1, 32, gfx->pixels);
-                HDC backbuffDC = CreateCompatibleDC(hdc);
-                SelectObject(backbuffDC, backbuffer);
-                BitBlt(hdc, 0, 0, gfx->width, gfx->height, backbuffDC, 0, 0, SRCCOPY);
-                DeleteObject(backbuffer);
-                DeleteDC(backbuffDC);
-                EndPaint(hwnd, &ps);
+            HBITMAP backbuffer = CreateBitmap(gfx->width, gfx->height, 1, 32, gfx->pixels);
+            HDC backbuffDC = CreateCompatibleDC(hdc);
+            SelectObject(backbuffDC, backbuffer);
+            BitBlt(hdc, 0, 0, gfx->width, gfx->height, backbuffDC, 0, 0, SRCCOPY);
+            DeleteObject(backbuffer);
+            DeleteDC(backbuffDC);
+            EndPaint(hwnd, &ps);
 
-                TranslateMessage(&wm);
-                DispatchMessage(&wm);
-            }
-            continue;
+            TranslateMessage(&wm);
+            DispatchMessage(&wm);
+        }
+        continue;
         case WM_USER + 1:
             msg->message = wm.wParam;
             msg->param1 = wm.lParam;
@@ -279,7 +278,7 @@ int gfx_poll(gfx_t* gfx, gfx_msg_t* msg)
 }
 
 
-int gfx_push(gfx_t* gfx, int type, int param)
+int gfx_push(gfx_t *gfx, int type, int param)
 {
     HWND hwnd = (HWND)gfx->fd;
     PostMessage(hwnd, WM_USER + 1, type, param);

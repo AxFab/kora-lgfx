@@ -26,7 +26,7 @@ PACK(struct bmp_header {
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-static int gfx_read_bmp8(gfx_t* gfx, int fd)
+static int gfx_read_bmp8(gfx_t *gfx, int fd)
 {
     int c, x, y = gfx->height;
     int r = gfx->width % 4;
@@ -43,7 +43,7 @@ static int gfx_read_bmp8(gfx_t* gfx, int fd)
     return 0;
 }
 
-static int gfx_read_bmp15(gfx_t* gfx, int fd)
+static int gfx_read_bmp15(gfx_t *gfx, int fd)
 {
     int c, x, y = gfx->height;
     int r = gfx->width % 4;
@@ -60,7 +60,7 @@ static int gfx_read_bmp15(gfx_t* gfx, int fd)
     return 0;
 }
 
-static int gfx_read_bmp16(gfx_t* gfx, int fd)
+static int gfx_read_bmp16(gfx_t *gfx, int fd)
 {
     int c, x, y = gfx->height;
     int r = gfx->width % 4;
@@ -77,7 +77,7 @@ static int gfx_read_bmp16(gfx_t* gfx, int fd)
     return 0;
 }
 
-static int gfx_read_bmp24(gfx_t* gfx, int fd)
+static int gfx_read_bmp24(gfx_t *gfx, int fd)
 {
     int x, y = gfx->height;
     int r = gfx->width % 4;
@@ -92,18 +92,17 @@ static int gfx_read_bmp24(gfx_t* gfx, int fd)
     return 0;
 }
 
-static int gfx_read_bmp32(gfx_t* gfx, int fd)
+static int gfx_read_bmp32(gfx_t *gfx, int fd)
 {
     int y = gfx->height;
-    while (y-- > 0) {
+    while (y-- > 0)
         read(fd, &gfx->pixels4[y * gfx->width], gfx->pitch);
-    }
     return 0;
 }
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-static int gfx_write_bmp24(gfx_t* gfx, int fd)
+static int gfx_write_bmp24(gfx_t *gfx, int fd)
 {
     int x, y = gfx->height;
     int r = gfx->pitch % 4;
@@ -118,12 +117,11 @@ static int gfx_write_bmp24(gfx_t* gfx, int fd)
     return 0;
 }
 
-static int gfx_write_bmp32(gfx_t* gfx, int fd)
+static int gfx_write_bmp32(gfx_t *gfx, int fd)
 {
     int y = gfx->height;
-    while (y-- > 0) {
+    while (y-- > 0)
         write(fd, &gfx->pixels4[y * gfx->width], gfx->pitch);
-    }
     return 0;
 }
 
@@ -132,7 +130,7 @@ static int gfx_write_bmp32(gfx_t* gfx, int fd)
 #define GFX_FRMT_BMP24 24
 #define GFX_FRMT_BMP32 32
 
-int gfx_load_image_bmp(gfx_t * gfx, int fd)
+int gfx_load_image_bmp(gfx_t *gfx, int fd)
 {
     struct bmp_header head;
     if (read(fd, &head, sizeof(head)) != sizeof(head))

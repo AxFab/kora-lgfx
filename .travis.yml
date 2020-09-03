@@ -30,6 +30,6 @@ script:
   - mkdir build
   - cd build
   - ../configure
-  - make
+  - make VERBOSE=1
   - make check
 

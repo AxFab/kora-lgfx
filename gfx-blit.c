@@ -8,13 +8,13 @@
 typedef uint32_t (*gfx_blend_proc_t)(uint32_t low, uint32_t upr);
 
 
-static void* memcpy32(void* dest, void* src, size_t lg)
+static void *memcpy32(void *dest, void *src, size_t lg)
 {
     assert(IS_ALIGNED(lg, 4));
     assert(IS_ALIGNED((size_t)dest, 4));
     assert(IS_ALIGNED((size_t)src, 4));
-    register uint32_t* a = (uint32_t*)src;
-    register uint32_t* b = (uint32_t*)dest;
+    register uint32_t *a = (uint32_t *)src;
+    register uint32_t *b = (uint32_t *)dest;
     while (lg > 16) {
         b[0] = a[0];
         b[1] = a[1];
@@ -33,11 +33,11 @@ static void* memcpy32(void* dest, void* src, size_t lg)
     return dest;
 }
 
-static void* memset32(void* dest, uint32_t val, size_t lg)
+static void *memset32(void *dest, uint32_t val, size_t lg)
 {
     assert(IS_ALIGNED(lg, 4));
     assert(IS_ALIGNED((size_t)dest, 4));
-    register uint32_t* a = (uint32_t*)dest;
+    register uint32_t *a = (uint32_t *)dest;
     while (lg > 16) {
         a[0] = val;
         a[1] = val;
@@ -120,29 +120,29 @@ uint32_t gfx_selected_blend(uint32_t low, uint32_t upr)
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 static inline void gfx_blit_generic(uint8_t *pixels, uint8_t *src_pixels,
-    int dpitch, int spitch, int minx, int maxx, int miny, int maxy, int dx, int dy,
-    gfx_blend_proc_t blend)
+                                    int dpitch, int spitch, int minx, int maxx, int miny, int maxy, int dx, int dy,
+                                    gfx_blend_proc_t blend)
 {
     int i, j;
     for (i = miny; i < maxy; ++i) {
         int k0 = i * dpitch;
         int k1 = (i + dy) * spitch;
         for (j = minx; j < maxx; ++j) {
-            uint32_t* s = (uint32_t*)&src_pixels[k1 + (j + dx) * 4];
-            uint32_t* d = (uint32_t*)&pixels[k0 + j * 4];
+            uint32_t *s = (uint32_t *)&src_pixels[k1 + (j + dx) * 4];
+            uint32_t *d = (uint32_t *)&pixels[k0 + j * 4];
             *d = blend(*d, *s);
         }
     }
 }
 
 static inline void gfx_fill_generic(uint8_t *pixels, uint32_t color,
-    int dpitch, int minx, int maxx, int miny, int maxy, gfx_blend_proc_t blend)
+                                    int dpitch, int minx, int maxx, int miny, int maxy, gfx_blend_proc_t blend)
 {
     int i, j;
     for (i = miny; i < maxy; ++i) {
         int k0 = i * dpitch;
         for (j = minx; j < maxx; ++j) {
-            uint32_t* d = (uint32_t*)&pixels[k0 + (minx + j) * 4];
+            uint32_t *d = (uint32_t *)&pixels[k0 + (minx + j) * 4];
             *d = blend(*d, color);
         }
     }
@@ -150,7 +150,7 @@ static inline void gfx_fill_generic(uint8_t *pixels, uint32_t color,
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-void gfx_blit(gfx_t *dst, gfx_t* src, gfx_blend_t mode, gfx_clip_t* clip, gfx_clip_t* clip_src)
+void gfx_blit(gfx_t *dst, gfx_t *src, gfx_blend_t mode, gfx_clip_t *clip, gfx_clip_t *clip_src)
 {
     int i;
     int minx = clip == NULL ? 0 : MAX(0, clip->left);
@@ -172,22 +172,19 @@ void gfx_blit(gfx_t *dst, gfx_t* src, gfx_blend_t mode, gfx_clip_t* clip, gfx_cl
             int k1 = (i + dy) * src->pitch;
             memcpy32(&dst->pixels[k0 + minx * 4], &src->pixels[k1 + (minx + dx) * 4], (maxx - minx) * 4);
         }
-    }
-    else if (mode == GFX_ALPHA_BLEND) {
+    } else if (mode == GFX_ALPHA_BLEND) {
         gfx_blit_generic(dst->pixels, src->pixels, dst->pitch, src->pitch,
-            minx, maxx, miny, maxy, dx, dy, gfx_alpha_blend);
-    }
-    else if (mode == GFX_UPPER_BLEND) {
+                         minx, maxx, miny, maxy, dx, dy, gfx_alpha_blend);
+    } else if (mode == GFX_UPPER_BLEND) {
         gfx_blit_generic(dst->pixels, src->pixels, dst->pitch, src->pitch,
-            minx, maxx, miny, maxy, dx, dy, gfx_upper_alpha_blend);
-    }
-    else if (mode == GFX_CLRBLEND) {
+                         minx, maxx, miny, maxy, dx, dy, gfx_upper_alpha_blend);
+    } else if (mode == GFX_CLRBLEND) {
         gfx_blit_generic(dst->pixels, src->pixels, dst->pitch, src->pitch,
-            minx, maxx, miny, maxy, dx, dy, gfx_selected_blend);
+                         minx, maxx, miny, maxy, dx, dy, gfx_selected_blend);
     }
 }
 
-void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, gfx_clip_t* clip)
+void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, gfx_clip_t *clip)
 {
 
     int i;
@@ -203,21 +200,19 @@ void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, gfx_clip_t* clip)
             int k0 = i * dst->pitch;
             memset32(&dst->pixels[k0 + minx * 4], color, (maxx - minx) * 4);
         }
-    }
-    else if (mode == GFX_ALPHA_BLEND) {
+    } else if (mode == GFX_ALPHA_BLEND) {
         gfx_fill_generic(dst->pixels, color, dst->pitch,
-            minx, maxx, miny, maxy, gfx_alpha_blend);
-    }
-    else if (mode == GFX_UPPER_BLEND) {
+                         minx, maxx, miny, maxy, gfx_alpha_blend);
+    } else if (mode == GFX_UPPER_BLEND) {
         gfx_fill_generic(dst->pixels, color, dst->pitch,
-            minx, maxx, miny, maxy, gfx_upper_alpha_blend);
+                         minx, maxx, miny, maxy, gfx_upper_alpha_blend);
     }
 }
 
 
 #include <math.h>
 
-void gfx_blit_scale(gfx_t* dst, gfx_t* src, gfx_blend_t blend, gfx_clip_t* clip_dst, gfx_clip_t* clip_src)
+void gfx_blit_scale(gfx_t *dst, gfx_t *src, gfx_blend_t blend, gfx_clip_t *clip_dst, gfx_clip_t *clip_src)
 {
     gfx_clip_t dc;
     if (clip_dst)
@@ -252,9 +247,9 @@ void gfx_blit_scale(gfx_t* dst, gfx_t* src, gfx_blend_t blend, gfx_clip_t* clip_
     for (i = miny; i < maxy; ++i) {
         int k0 = i * dst->width;
         float ny = ry * i + dy;
-        float my = ry * (i+1) + dy;
+        float my = ry * (i + 1) + dy;
         for (j = minx; j < maxx; ++j) {
-            uint32_t* D = &dst->pixels4[k0 + (minx + j)];
+            uint32_t *D = &dst->pixels4[k0 + (minx + j)];
             float R = 0;
             float G = 0;
             float B = 0;

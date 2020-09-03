@@ -34,7 +34,7 @@ SRCS-y += $(srcdir)/addons/gfx-disto-$(disto).c
 CFLAGS ?= -Wall -Wextra -ggdb
 CFLAGS += -fPIC
 
-LFLAGS ?= -Wl,-z,defs
+# LFLAGS ?= -Wl,-z,defs
 LFLAGS += -lm
 
 
@@ -46,8 +46,8 @@ LFLAGS += $(shell $(PKC) --libs libpng)
 endif
 
 ifeq ($(has_threads),n)
-SRCS-y += $(srcdir)/threads/threds_posix.c
-CFLAGS += -I $(topdir)/threads $(shell $(PKC) --cflags pthread)
+SRCS-y += $(srcdir)/addons/threads_posix.c
+CFLAGS += -I $(topdir)/addons $(shell $(PKC) --cflags pthread)
 LFLAGS +=  $(shell $(PKC) --libs pthread)
 endif
 

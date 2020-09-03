@@ -1,13 +1,13 @@
 #include "gfx.h"
 #include "keycodes.h"
 
-int gfx_handle(gfx_t* gfx, gfx_msg_t* msg, gfx_seat_t* seat)
+int gfx_handle(gfx_t *gfx, gfx_msg_t *msg, gfx_seat_t *seat)
 {
     int key, key2, x, y;
     seat->rel_x = seat->rel_y = 0;
 
     switch (msg->message) {
-        // TODO - Drag&Drop, Exposed/Hidden, MouseOver/out,
+    // TODO - Drag&Drop, Exposed/Hidden, MouseOver/out,
     case GFX_EV_MOUSEMOVE:
         x = seat->mouse_x;
         y = seat->mouse_y;
@@ -51,7 +51,7 @@ int gfx_handle(gfx_t* gfx, gfx_msg_t* msg, gfx_seat_t* seat)
 }
 
 
-void gfx_invalid(gfx_t* gfx)
+void gfx_invalid(gfx_t *gfx)
 {
     gfx->flags |= GFX_FL_INVALID;
 }

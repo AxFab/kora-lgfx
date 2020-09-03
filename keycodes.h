@@ -23,8 +23,7 @@
 #define _FROM_SCANCODE(x)  (x|(1<<30))
 #define KEY_UNICODE_MAX  (1<<30)
 
-typedef enum
-{
+typedef enum {
     KEY_UNKNOWN = 0,
 
     /* Control characters */
@@ -179,8 +178,7 @@ typedef enum
 
 } keycode_t;
 
-typedef enum
-{
+typedef enum {
     KMOD_NONE = 0x000,
     KMOD_LSHIFT = 0x001,
     KMOD_RSHIFT = 0x002,

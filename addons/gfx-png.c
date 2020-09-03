@@ -22,7 +22,7 @@ void gfx_png_warning_fn(png_structp png_ptr, png_const_charp png_charp)
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-int gfx_load_image_png(gfx_t * gfx, int fd)
+int gfx_load_image_png(gfx_t *gfx, int fd)
 {
     uint8_t sig[16];
     read(fd, sig, 16);
@@ -30,22 +30,21 @@ int gfx_load_image_png(gfx_t * gfx, int fd)
         return -1;
 
     png_structp png_ptr = png_create_read_struct
-    (PNG_LIBPNG_VER_STRING, (png_voidp)&gfx_png_error_ptr,
-        gfx_png_error_fn, (png_error_ptr)gfx_png_warning_fn);
+                          (PNG_LIBPNG_VER_STRING, (png_voidp)&gfx_png_error_ptr,
+                           gfx_png_error_fn, (png_error_ptr)gfx_png_warning_fn);
 
     if (!png_ptr)
         return -1;
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
-    if (!info_ptr)
-    {
+    if (!info_ptr) {
         png_destroy_read_struct(&png_ptr,
-            (png_infopp)NULL, (png_infopp)NULL);
+                                (png_infopp)NULL, (png_infopp)NULL);
         return -1;
     }
 
     lseek(fd, 0, SEEK_SET);
-    FILE* fp = fdopen(fd, "rb");
+    FILE *fp = fdopen(fd, "rb");
 
     png_init_io(png_ptr, fp);
 
@@ -75,7 +74,7 @@ int gfx_load_image_png(gfx_t * gfx, int fd)
 
     gfx_map(gfx);
 
-    png_bytep* row_ptrs = malloc(gfx->height * sizeof(png_bytep *));
+    png_bytep *row_ptrs = malloc(gfx->height * sizeof(png_bytep *));
     for (int i = 0; i < gfx->height; ++i)
         row_ptrs[i] = &gfx->pixels[i * gfx->pitch];
 

@@ -448,7 +448,7 @@ int thrd_join(thrd_t thr, int *res)
 }
 
 // 7.25.5.7
-void thrd_sleep(const xtime* xt, const xtime* rem)
+void thrd_sleep(const xtime *xt, const xtime *rem)
 {
     assert(xt);
     Sleep(impl_xtime2msec(xt));

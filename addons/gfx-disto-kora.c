@@ -27,7 +27,7 @@ int gfx_clipboard_paste(char *buf, int len)
 
 const char *pipe_name = "";
 
-int gfx_open_window(gfx_t* gfx)
+int gfx_open_window(gfx_t *gfx)
 {
     gfx->fd = window(0, gfx->width, gfx->height, 0);
     gfx->fi = gfx->fd;
@@ -36,7 +36,7 @@ int gfx_open_window(gfx_t* gfx)
     return 0;
 }
 
-int gfx_open_device(gfx_t* gfx, const char *path)
+int gfx_open_device(gfx_t *gfx, const char *path)
 {
     gfx->fd = open(path, O_RDWR | O_DIRECT);
     gfx->fi = gfx->fd;
@@ -45,7 +45,7 @@ int gfx_open_device(gfx_t* gfx, const char *path)
     return 0;
 }
 
-int gfx_close_window(gfx_t* gfx)
+int gfx_close_window(gfx_t *gfx)
 {
     close(gfx->fd);
     if (gfx->fd != gfx->fi)
@@ -104,7 +104,7 @@ int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
 }
 
 
-int gfx_push(gfx_t* gfx, int type, int param)
+int gfx_push(gfx_t *gfx, int type, int param)
 {
     (void)gfx; // TODO -- WRITE ON PIPE!!
     gfx_msg_t msg;
