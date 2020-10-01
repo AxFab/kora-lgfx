@@ -142,7 +142,7 @@ static inline void gfx_fill_generic(uint8_t *pixels, uint32_t color,
     for (i = miny; i < maxy; ++i) {
         int k0 = i * dpitch;
         for (j = minx; j < maxx; ++j) {
-            uint32_t *d = (uint32_t *)&pixels[k0 + (minx + j) * 4];
+            uint32_t *d = (uint32_t *)&pixels[k0 + j * 4];
             *d = blend(*d, color);
         }
     }

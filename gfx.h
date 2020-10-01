@@ -115,52 +115,78 @@ struct gfx_clip {
     int left, right, top, bottom;
 };
 
+
+
 /*
 Gfx create a pointer to a surface.
 This surface can be a fix image, or a video stream (in/out) or a window (event), or even a frame buffer (like window)
 
         /dev/fb0  is a framebuffer
         /dev/seat0  is a window or desktop !
-
 */
+typedef struct gfx_placement gfx_placement_t;
+struct gfx_placement {
+    int screen;
+    int type;
+    int left;
+    int top;
+};
 
 
-
-/* Surface operations
+/* Surface creation
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 gfx_t *gfx_create_window(void *ctx, int width, int height);
 gfx_t *gfx_create_surface(int width, int height);
 void gfx_destroy(gfx_t *gfx);
-int gfx_resize(gfx_t *gfx, int width, int height);
+gfx_t *gfx_load_image(const char *name);
+void gfx_save_image(gfx_t *gfx);
+
+
+/* Error handling
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
+int gfx_read_error(char *buf, int len);
+
+
+/* Windows operations
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
+int gfx_set_caption(gfx_t *win, const char *title, unsigned icon);
+int gfx_title(gfx_t *win, char *buf, int len);
+unsigned gfx_icon(gfx_t *win);
+int gfx_set_position(gfx_t *win, const gfx_placement_t *place);
+int gfx_position(gfx_t *win, gfx_placement_t *place);
+
+/* Frame operations
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 void *gfx_map(gfx_t *gfx);
 void gfx_unmap(gfx_t *gfx);
+int gfx_flip(gfx_t *gfx);
+int gfx_resize(gfx_t *gfx, int width, int height);
 int gfx_width(gfx_t *gfx);
 int gfx_height(gfx_t *gfx);
-
-
-gfx_t *gfx_open(const char *name, int flags);
-void gfx_close(gfx_t *gfx);
-
-
-/* Drawing operations
--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-
-void gfx_blit(gfx_t *dst, gfx_t *src, gfx_blend_t mode, gfx_clip_t *clip, gfx_clip_t *clip_src);
-void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, gfx_clip_t *clip);
-// void gfx_blit_scale(gfx_t *dst, gfx_t* src, gfx_blend_t mode, gfx_clip_t* clip_dst, gfx_clip_t* clip_src);
-// void gfx_blit_transform(gfx_t *dst, gfx_t* src, gfx_blend_t mode, gfx_clip_t* clip, float *matrix);
-
-uint32_t gfx_alpha_blend(uint32_t low, uint32_t upr);
-uint32_t gfx_upper_alpha_blend(uint32_t low, uint32_t upr);
+int gfx_load(gfx_t *gfx, const void *buf, int mode, int pitch, int height);
+int gfx_store(gfx_t *gfx, void *buf, int mode, int pitch, int height);
 
 
 /* Event operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 int gfx_poll(gfx_t *gfx, gfx_msg_t *msg);
 int gfx_push(gfx_t *gfx, int type, int param);
-/* Go to next frame */
-int gfx_flip(gfx_t *gfx);
-int gfx_resize(gfx_t *gfx, int width, int height);
+unsigned gfx_itimer(gfx_t *gfx, struct timespec *delay);
+unsigned gfx_delay(gfx_t *gfx, struct timespec *delay);
+
+
+/* Drawing operations
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
+void gfx_blit(gfx_t *dst, gfx_t *src, gfx_blend_t mode, gfx_clip_t *clip, gfx_clip_t *clip_src);
+void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, gfx_clip_t *clip);
+void gfx_blit_scale(gfx_t *dst, gfx_t* src, gfx_blend_t mode, gfx_clip_t* clip_dst, gfx_clip_t* clip_src);
+
+
+uint32_t gfx_alpha_blend(uint32_t low, uint32_t upr);
+uint32_t gfx_upper_alpha_blend(uint32_t low, uint32_t upr);
+
+
+
 
 
 /* Helpers
@@ -175,13 +201,6 @@ int gfx_handle(gfx_t *gfx, gfx_msg_t *msg, gfx_seat_t *seat);
 gfx_t *gfx_opend(int fd, int fi);
 int gfx_push_msg(gfx_t *gfx, int type, int param);
 void gfx_invalid(gfx_t *gfx);
-
-gfx_t *gfx_load_image(const char *name);
-
-
-
-
-
 
 
 // Context
