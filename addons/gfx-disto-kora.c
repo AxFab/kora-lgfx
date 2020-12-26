@@ -56,7 +56,7 @@ int gfx_close_window(gfx_t *gfx)
 void gfx_map_window(gfx_t *gfx)
 {
     size_t lg = gfx->pitch * gfx->height * 2;
-    gfx->pixels = mmap(NULL, lg, 0x10002, 0, gfx->fd, 0);
+    gfx->pixels = mmap(NULL, lg, PROT_WRITE, MAP_PRIVATE | MAP_POPULATE, gfx->fd, 0);
     gfx->backup = ADDR_OFF(gfx->pixels, gfx->pitch * gfx->height);
 }
 

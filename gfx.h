@@ -179,7 +179,7 @@ unsigned gfx_delay(gfx_t *gfx, struct timespec *delay);
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 void gfx_blit(gfx_t *dst, gfx_t *src, gfx_blend_t mode, gfx_clip_t *clip, gfx_clip_t *clip_src);
 void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, gfx_clip_t *clip);
-void gfx_blit_scale(gfx_t *dst, gfx_t* src, gfx_blend_t mode, gfx_clip_t* clip_dst, gfx_clip_t* clip_src);
+void gfx_blit_scale(gfx_t *dst, gfx_t *src, gfx_blend_t mode, gfx_clip_t *clip_dst, gfx_clip_t *clip_src);
 
 
 uint32_t gfx_alpha_blend(uint32_t low, uint32_t upr);

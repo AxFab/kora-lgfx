@@ -28,8 +28,8 @@ use_png ?= $(shell $(PKC) --exists libpng && echo 'y')
 
 
 
-SRCS-y += $(wildcard $(srcdir)/*.c)
-SRCS-y += $(srcdir)/addons/gfx-disto-$(disto).c
+SRCS += $(wildcard $(srcdir)/*.c)
+SRCS += $(srcdir)/addons/gfx-disto-$(disto).c
 
 CFLAGS ?= -Wall -Wextra -ggdb
 CFLAGS += -fPIC
@@ -40,13 +40,13 @@ LFLAGS += -lm
 
 
 ifeq ($(use_png),y)
-SRCS-y += $(srcdir)/addons/gfx-png.c
+SRCS += $(srcdir)/addons/gfx-png.c
 CFLAGS += -D__USE_PNG $(shell $(PKC) --cflags libpng)
 LFLAGS += $(shell $(PKC) --libs libpng)
 endif
 
 ifeq ($(has_threads),n)
-SRCS-y += $(srcdir)/addons/threads_posix.c
+SRCS += $(srcdir)/addons/threads_posix.c
 CFLAGS += -I $(topdir)/addons $(shell $(PKC) --cflags pthread)
 LFLAGS +=  $(shell $(PKC) --libs pthread)
 endif
@@ -73,5 +73,5 @@ install-headers:
 
 
 ifeq ($(NODEPS),)
-include $(call fn_deps,SRCS-y)
+include $(call fn_deps,SRCS)
 endif
