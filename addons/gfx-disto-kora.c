@@ -7,6 +7,7 @@
 #include "../mcrs.h"
 #include <stdio.h>
 
+#define FB_FLIP 0x8002
 int window(int service, int width, int height, int flags);
 
 void gfx_clipboard_copy(const char *buf, int len)
@@ -73,7 +74,7 @@ int gfx_flip(gfx_t *gfx)
 {
     if (gfx->pixels == NULL)
         return -1;
-    fcntl(gfx->fd, 800/* FD_WFLIP */, 5, gfx->pixels, gfx->backup);
+    fcntl(gfx->fd, FB_FLIP, gfx->pixels > gfx->backup ? gfx->pitch * gfx->height: 0);
     uint8_t *tmp = gfx->backup;
     gfx->backup = gfx->pixels;
     gfx->pixels = tmp;
