@@ -24,7 +24,8 @@
 #include <errno.h>
 #include <stdio.h>
 #include <threads.h>
-#include "../gfx.h"
+#include <gfx.h>
+#include "../mcrs.h"
 
 void clipboard_copy(const char *buf, int len)
 {
@@ -108,7 +109,7 @@ static void gfx_parse_key(int fd, char *buf)
     }
 }
 
-static void gfx_read_events(int *fds)
+static int gfx_read_events(int *fds)
 {
     int cn, idx = 0;
     char buf[16] = { 0 };
@@ -141,120 +142,83 @@ static void gfx_read_events(int *fds)
     free(fds);
     thrd_detach(thrd_current());
     thrd_exit(0);
+    return 0;
 }
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-gfx_t *gfx_create_window(void *ctx, int width, int height, int flags)
-{
-    gfx_t *gfx = calloc(sizeof(gfx_t), 1);
-    gfx->width = width;
-    gfx->height = height;
-    gfx->fd = 0;
 
+int gfx_open_window(gfx_t *gfx)
+{
     int p2[2];
     int *p3 = malloc(2 * sizeof(int));
     pipe(p2);
     p3[0] = p2[1];
     p3[1] = pipe_name == NULL ? 0 : open(pipe_name, O_RDONLY);
-    gfx->fi = p2[0];
+    gfx->fd = p2[0];
 
     thrd_t thrd;
     thrd_create(&thrd, (thrd_start_t)gfx_read_events, p3);
-    ((void)ctx);
-    ((void)flags);
-    return gfx;
+    return 0;
 }
 
-void gfx_destroy(gfx_t *gfx)
+int gfx_open_device(gfx_t *gfx, const char *path)
+{
+    int p2[2];
+    int *p3 = malloc(2 * sizeof(int));
+    pipe(p2);
+    p3[0] = p2[1];
+    p3[1] = open(path, O_RDONLY);
+    gfx->fd = p2[0];
+
+    thrd_t thrd;
+    thrd_create(&thrd, (thrd_start_t)gfx_read_events, p3);
+    return 0;
+}
+
+int gfx_close_window(gfx_t *gfx)
 {
     gfx_unmap(gfx);
     close(gfx->fd);
-    free(gfx);
+    return 0;
 }
 
-
-int gfx_map(gfx_t *gfx)
+void gfx_map_window(gfx_t *gfx)
 {
     if (gfx->pixels != NULL)
-        return 0;
+        return;
     gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
     gfx->pixels = calloc(gfx->pitch, gfx->height);
-    return 0;
 }
 
-int gfx_unmap(gfx_t *gfx)
+void gfx_unmap_window(gfx_t *gfx)
 {
     if (gfx->pixels == NULL)
-        return 0;
+        return;
     free(gfx->pixels);
     gfx->pixels = NULL;
-    return 0;
 }
-
-PACK(struct bmp_header {
-    uint16_t magic;
-    uint32_t fsize;
-    uint32_t reserved;
-    uint32_t offset;
-    uint32_t hsize;
-    uint32_t width;
-    uint32_t height;
-    uint16_t planes;
-    uint16_t bitsperpx;
-    uint32_t compression;
-    uint32_t isize;
-    uint32_t xresol;
-    uint32_t yresol;
-    uint32_t a;
-    uint32_t b;
-});
-
-int gfx_export_bmp24(const char *name, gfx_t *gfx)
-{
-    struct bmp_header head;
-    int fd = open(name, O_WRONLY | O_CREAT, 0644);
-    if (fd == -1)
-        return -1;
-    memset(&head, 0, sizeof(head));
-    head.magic = 0x4d42;
-    head.fsize = sizeof(head) + gfx->width * 3 * gfx->height;
-    head.offset = sizeof(head);
-    head.hsize = sizeof(head) - 0xE;
-    head.width = gfx->width;
-    head.height = gfx->height;
-    head.planes = 1;
-    head.bitsperpx = 24;
-    head.isize = gfx->width * 3 * gfx->height;
-    if (write(fd, &head, sizeof(head)) != sizeof(head)) {
-        fprintf(stderr, "Error persisting image: %d\n", errno);
-        return -1;
-    }
-
-    int x, y = gfx->height;
-    while (y-- > 0) {
-        for (x = 0; x < gfx->width; ++x)
-            write(fd, &gfx->pixels4[y * gfx->width + x], 3);
-    }
-    close(fd);
-    return 0;
-}
-
 
 int gfx_flip(gfx_t *gfx)
 {
     if (gfx->pixels == NULL)
         return -1;
-    gfx_export_bmp24("win.bmp", gfx);
+    gfx_save_image(gfx, "win.bmp");
     return 0;
 }
 
-int gfx_poll(gfx_t *gfx, gfx_msg_t *msg)
+int gfx_poll(/*gfx_t *gfx, */gfx_msg_t *msg)
 {
+    gfx_t *gfx = NULL;
     for (;;) {
-        int by = read(gfx->fi, msg, sizeof(*msg));
+        int by = read(gfx->fd, msg, sizeof(*msg));
         if (by != 0)
             return by == sizeof(*msg) ? 0 : -1;
     }
+}
+
+int gfx_push(gfx_t *gfx, int type, int param)
+{
+    return -1;
 }
 

@@ -200,8 +200,10 @@ int gfx_save_image_bmp(gfx_t *gfx, int fd, int mode)
     head.fsize = sizeof(head) + head.isize;
 
     lseek(fd, 0, SEEK_SET); 
-    if (write(fd, &head, sizeof(head)) != sizeof(head))
+    if (write(fd, &head, sizeof(head)) != sizeof(head)) {
+        // fprintf(stderr, "Error persisting image: %d\n", errno);
         return -1;
+    }
 
     lseek(fd, head.offset, SEEK_SET);
     if (mode == GFX_FRMT_BMP24)
