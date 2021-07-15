@@ -17,39 +17,40 @@
 topdir ?= $(shell readlink -f $(dir $(word 1,$(MAKEFILE_LIST))))
 gendir ?= $(shell pwd)
 
-PACKAGE=lgfx
 include $(topdir)/make/global.mk
-include $(topdir)/make/build.mk
+srcdir = $(topdir)/src
 
+all: libgfx
+# PACKAGE=libgfx
+
+
+include $(topdir)/make/build.mk
+include $(topdir)/make/check.mk
+include $(topdir)/make/targets.mk
+
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 disto ?= kora
-has_threads ?= $(shell $(topdir)/make/compiler.sh '__STDC_VERSION__ >= 201112 && !defined __STDC_NO_THREADS__' $(CC))
 use_png ?= $(shell $(PKC) --exists libpng && echo 'y')
 
 
-
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 SRCS += $(wildcard $(srcdir)/*.c)
-SRCS += $(srcdir)/addons/gfx-disto-$(disto).c
+SRCS += $(srcdir)/addons/disto-$(disto).c
 
-CFLAGS ?= -Wall -Wextra -ggdb
+CFLAGS ?= -Wall -Wextra -Wno-unused-parameter -ggdb
+CFLAGS += -I$(topdir)/include
 CFLAGS += -fPIC
 
-# LFLAGS ?= -Wl,-z,defs
 LFLAGS += -lm
 
 
-
 ifeq ($(use_png),y)
-SRCS += $(srcdir)/addons/gfx-png.c
+SRCS += $(srcdir)/addons/img-png.c
 CFLAGS += -D__USE_PNG $(shell $(PKC) --cflags libpng)
 LFLAGS += $(shell $(PKC) --libs libpng)
 endif
 
-ifeq ($(has_threads),n)
-SRCS += $(srcdir)/addons/threads_posix.c
-CFLAGS += -I $(topdir)/addons $(shell $(PKC) --cflags pthread)
-LFLAGS +=  $(shell $(PKC) --libs pthread)
-endif
 
 ifeq ($(disto),x11)
 LFLAGS += -lX11
@@ -61,16 +62,18 @@ endif
 $(eval $(call link_shared,gfx,SRCS,LFLAGS))
 
 
+# install-headers:
+# 	$(S) mkdir -p $(prefix)/include
+# 	$(S) cp -RpP -f $(topdir)/gfx.h $(prefix)/include/gfx.h
+# 	$(S) cp -RpP -f $(topdir)/keycodes.h $(prefix)/include/keycodes.h
 
 
-include $(topdir)/make/check.mk
-include $(topdir)/make/targets.mk
+e_dist:
+	@echo $(target_arch)-$(target_os)
+e_srcs:
+	@echo $(SRCS)
 
-install-headers:
-	$(S) mkdir -p $(prefix)/include
-	$(S) cp -RpP -f $(topdir)/gfx.h $(prefix)/include/gfx.h
-	$(S) cp -RpP -f $(topdir)/keycodes.h $(prefix)/include/keycodes.h
-
+check: $(patsubst %,val_%,$(CHECKS))
 
 ifeq ($(NODEPS),)
 include $(call fn_deps,SRCS)

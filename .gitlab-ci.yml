@@ -1,0 +1,35 @@
+# CI script for KoraOS on Gitlab
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+build:
+  stage: build
+  script:
+    - make clean
+    - make disto=bmp
+  artifacts:
+    paths:
+      - lib/libgfx.so
+
+test:
+  stage: test
+  script:
+    - make clean
+    # - make coverage NOSCALL=y GCOV=y
+  coverage: /(\d+(\.\d+)?)% \(\d+ of \d+ lines\)/
+
+deploy:
+  stage: deploy
+  needs:
+    - job: build
+      artifacts: true
+  only:
+    refs:
+      - /v[0-9]*\.[0-9]*\.[0-9]*/
+  script:
+    - echo "Send to repository"
+    - size lib/libgfx.so
+  release:
+    name: "$CI_COMMIT_TAG"
+    description:  'My awesome release'
+    tag_name: "$CI_COMMIT_TAG"
+

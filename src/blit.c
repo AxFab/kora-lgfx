@@ -1,3 +1,22 @@
+/*
+ *      This file is part of the KoraOS project.
+ *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *   - - - - - - - - - - - - - - -
+ */
 #include "gfx.h"
 #include <assert.h>
 #include <string.h>
@@ -56,6 +75,7 @@ static void *memset32(void *dest, uint32_t val, size_t lg)
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+uint32_t __selected_color = 0xff0000;
 
 // Mix two colors with transparency
 static inline uint32_t gfx_alpha_blend_(uint32_t low, uint32_t upr)
@@ -98,24 +118,30 @@ static inline uint32_t gfx_upper_alpha_blend_(uint32_t low, uint32_t upr)
 
 static inline uint32_t gfx_selected_blend_(uint32_t low, uint32_t upr)
 {
-    return (upr & 0xffffff) == 0xff0000 ? low : upr;
+    return (upr & 0xffffff) == __selected_color ? low : upr;
 }
 
-uint32_t gfx_alpha_blend(uint32_t low, uint32_t upr)
+LIBAPI uint32_t gfx_alpha_blend(uint32_t low, uint32_t upr)
 {
     return gfx_alpha_blend_(low, upr);
 }
 
-uint32_t gfx_upper_alpha_blend(uint32_t low, uint32_t upr)
+LIBAPI uint32_t gfx_upper_alpha_blend(uint32_t low, uint32_t upr)
 {
     return gfx_upper_alpha_blend_(low, upr);
 }
 
-uint32_t gfx_selected_blend(uint32_t low, uint32_t upr)
+LIBAPI uint32_t gfx_selected_blend(uint32_t low, uint32_t upr)
 {
     return gfx_selected_blend_(low, upr);
 }
 
+LIBAPI uint32_t gfx_select_color(uint32_t color)
+{
+    uint32_t val = __selected_color;
+    __selected_color = val;
+    return val;
+}
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -150,7 +176,7 @@ static inline void gfx_fill_generic(uint8_t *pixels, uint32_t color,
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-void gfx_blit(gfx_t *dst, gfx_t *src, gfx_blend_t mode, gfx_clip_t *clip, gfx_clip_t *clip_src)
+LIBAPI void gfx_blit(gfx_t *dst, gfx_t *src, gfx_blend_t mode, const gfx_clip_t *clip, const gfx_clip_t *clip_src)
 {
     int i;
     int minx = clip == NULL ? 0 : MAX(0, clip->left);
@@ -184,7 +210,7 @@ void gfx_blit(gfx_t *dst, gfx_t *src, gfx_blend_t mode, gfx_clip_t *clip, gfx_cl
     }
 }
 
-void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, gfx_clip_t *clip)
+LIBAPI void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, const gfx_clip_t *clip)
 {
 
     int i;
@@ -212,7 +238,7 @@ void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, gfx_clip_t *clip)
 
 #include <math.h>
 
-void gfx_blit_scale(gfx_t *dst, gfx_t *src, gfx_blend_t blend, gfx_clip_t *clip_dst, gfx_clip_t *clip_src)
+LIBAPI void gfx_blit_scale(gfx_t *dst, gfx_t *src, gfx_blend_t blend, const gfx_clip_t *clip_dst, const gfx_clip_t *clip_src)
 {
     gfx_clip_t dc;
     if (clip_dst)
@@ -281,7 +307,14 @@ void gfx_blit_scale(gfx_t *dst, gfx_t *src, gfx_blend_t blend, gfx_clip_t *clip_
             }
 
             uint32_t S = GFX_RGB(0xff, (int)(R / sm), (int)(G / sm), (int)(B / sm));
-            *D = S;
+            if (blend == GFX_NOBLEND)
+                *D = S;
+            else if (blend == GFX_ALPHA_BLEND)
+                *D = gfx_alpha_blend_(*D, S);
+            else if (blend == GFX_UPPER_BLEND)
+                *D = gfx_upper_alpha_blend_(*D, S);
+            else if (blend == GFX_CLRBLEND)
+                *D = gfx_selected_blend_(*D, S);
         }
     }
 }

@@ -1,3 +1,22 @@
+/*
+ *      This file is part of the KoraOS project.
+ *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *   - - - - - - - - - - - - - - -
+ */
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -157,11 +176,9 @@ int gfx_load_image_bmp(gfx_t *gfx, int fd)
     return -1;
 }
 
-int gfx_persist_image_bmp(gfx_t *gfx, int fd, int mode)
+int gfx_save_image_bmp(gfx_t *gfx, int fd, int mode)
 {
     struct bmp_header head;
-    if (write(fd, &head, sizeof(head)) != sizeof(head))
-        return -1;
     gfx_map(gfx);
 
     memset(&head, 0, sizeof(head));
@@ -172,7 +189,6 @@ int gfx_persist_image_bmp(gfx_t *gfx, int fd, int mode)
     head.height = gfx->height;
     head.planes = 1;
 
-
     if (mode == GFX_FRMT_BMP24) {
         head.bitsperpx = 24;
         head.isize = gfx->width * 3 * gfx->height;
@@ -182,8 +198,12 @@ int gfx_persist_image_bmp(gfx_t *gfx, int fd, int mode)
     }
 
     head.fsize = sizeof(head) + head.isize;
-    lseek(fd, head.offset, SEEK_SET);
 
+    lseek(fd, 0, SEEK_SET); 
+    if (write(fd, &head, sizeof(head)) != sizeof(head))
+        return -1;
+
+    lseek(fd, head.offset, SEEK_SET);
     if (mode == GFX_FRMT_BMP24)
         return gfx_write_bmp24(gfx, fd);
     if (mode == GFX_FRMT_BMP32)

@@ -35,6 +35,14 @@
 #  endif
 #endif
 
+#ifndef LIBAPI
+# if defined(WIN32) || defined(_WIN32)
+#  define LIBAPI __declspec(dllexport)
+# else
+#  define LIBAPI
+# endif
+#endif
+
 #define GFX_ALPHA(c)  (((c) >> 24) & 0xff)
 #define GFX_RED(c)  (((c) >> 16) & 0xff)
 #define GFX_GREEN(c)  (((c) >> 8) & 0xff)
@@ -48,7 +56,8 @@ typedef struct gfx gfx_t;
 typedef struct gfx_seat gfx_seat_t;
 typedef struct gfx_msg gfx_msg_t;
 typedef struct gfx_clip gfx_clip_t;
-
+typedef struct gfx_font gfx_font_t;
+typedef struct gfx_text_metrics gfx_text_metrics_t;
 
 enum gfx_blend {
     GFX_NOBLEND, // Just copy the color
@@ -72,24 +81,41 @@ enum gfx_event {
     GFX_EV_DELAY = 127,
 };
 
-enum gfx_flags {
-    GFX_FL_INVALID = (1 << 0),
-    GFX_FL_PAINTTICK = (1 << 1),
-    GFX_FL_EXPOSED = (1 << 2),
+enum gfx_font_mode {
+    GFX_FT_BITFONT = 1,
+    GFX_FT_FREETYPE = 2,
+};
+
+enum gfx_font_style {
+    GFX_FONT_ITALIC = 0x10,
+    GFX_FONT_WTHIN = 1,
+    GFX_FONT_WEXTRALIGHT = 2,
+    GFX_FONT_WLIGHT = 3,
+    GFX_FONT_WREGULAR = 4,
+    GFX_FONT_WMEDIUM = 5,
+    GFX_FONT_WSEMIBOLD = 6,
+    GFX_FONT_WBOLD = 7,
+    GFX_FONT_WEXTRABOLD = 8,
+    GFX_FONT_WBLACK = 9,
+    GFX_FONT_WEIGHT_MASK = 0xF,
 };
 
 struct gfx {
     int width;
     int height;
     int pitch;
-    long fd;
-    long fi;
+    uint32_t uid;
+    // int flags;
     union {
-        uint8_t *pixels;
-        uint32_t *pixels4;
+        uint8_t* pixels;
+        uint32_t* pixels4;
     };
-    uint8_t *backup;
-    int flags;
+    union {
+        uint8_t* backup;
+        uint32_t* backup4;
+    };
+    long fd;
+    gfx_seat_t *seat;
 };
 
 struct gfx_seat {
@@ -104,18 +130,33 @@ struct gfx_seat {
     int *kdb_alt_layout;
 };
 
-PACK(struct gfx_msg {
+struct gfx_msg {
     uint16_t message;
     uint16_t window;
     uint32_t param1;
     uint32_t param2;
-});
+    gfx_t* gfx;
+};
 
 struct gfx_clip {
     int left, right, top, bottom;
 };
 
 
+struct gfx_font {
+    int mode;
+    float size;
+    int style;
+    char *family;
+    void *face;
+};
+
+
+struct gfx_text_metrics {
+    int width;
+    int height;
+    int baseline;
+};
 
 /*
 Gfx create a pointer to a surface.
@@ -135,17 +176,12 @@ struct gfx_placement {
 
 /* Surface creation
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-gfx_t *gfx_create_window(void *ctx, int width, int height);
-gfx_t *gfx_create_surface(int width, int height);
-void gfx_destroy(gfx_t *gfx);
-gfx_t *gfx_load_image(const char *name);
-void gfx_save_image(gfx_t *gfx);
-
-
-/* Error handling
--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-int gfx_read_error(char *buf, int len);
-
+LIBAPI gfx_t *gfx_create_window(void *ctx, int width, int height);
+LIBAPI gfx_t* gfx_create_surface(int width, int height);
+LIBAPI gfx_t* gfx_open_surface(const char* path);
+LIBAPI void gfx_destroy(gfx_t *gfx);
+LIBAPI gfx_t *gfx_load_image(const char * path);
+LIBAPI int gfx_save_image(gfx_t *gfx, const char* path);
 
 /* Windows operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
@@ -155,58 +191,57 @@ unsigned gfx_icon(gfx_t *win);
 int gfx_set_position(gfx_t *win, const gfx_placement_t *place);
 int gfx_position(gfx_t *win, gfx_placement_t *place);
 
-/* Frame operations
+/* Mapping operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-void *gfx_map(gfx_t *gfx);
-void gfx_unmap(gfx_t *gfx);
-int gfx_flip(gfx_t *gfx);
-int gfx_resize(gfx_t *gfx, int width, int height);
-int gfx_width(gfx_t *gfx);
-int gfx_height(gfx_t *gfx);
-int gfx_load(gfx_t *gfx, const void *buf, int mode, int pitch, int height);
-int gfx_store(gfx_t *gfx, void *buf, int mode, int pitch, int height);
+LIBAPI void *gfx_map(gfx_t *gfx);
+LIBAPI void gfx_unmap(gfx_t *gfx);
+int gfx_width(gfx_t* gfx);
+int gfx_height(gfx_t* gfx);
+LIBAPI int gfx_resize(gfx_t* gfx, int width, int height);
+LIBAPI int gfx_flip(gfx_t *gfx);
 
 
 /* Event operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-int gfx_poll(gfx_t *gfx, gfx_msg_t *msg);
-int gfx_push(gfx_t *gfx, int type, int param);
-unsigned gfx_itimer(gfx_t *gfx, struct timespec *delay);
-unsigned gfx_delay(gfx_t *gfx, struct timespec *delay);
+LIBAPI int gfx_poll(gfx_msg_t *msg);
+LIBAPI int gfx_push(gfx_t *gfx, int type, int param);
+LIBAPI void gfx_handle(gfx_msg_t* msg);
+LIBAPI unsigned gfx_timer(int delay, int interval);
 
 
 /* Drawing operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-void gfx_blit(gfx_t *dst, gfx_t *src, gfx_blend_t mode, gfx_clip_t *clip, gfx_clip_t *clip_src);
-void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, gfx_clip_t *clip);
-void gfx_blit_scale(gfx_t *dst, gfx_t *src, gfx_blend_t mode, gfx_clip_t *clip_dst, gfx_clip_t *clip_src);
+LIBAPI void gfx_blit(gfx_t *dst, gfx_t *src, gfx_blend_t mode, const gfx_clip_t *clip, const gfx_clip_t *clip_src);
+LIBAPI void gfx_fill(gfx_t *dst, uint32_t color, gfx_blend_t mode, const gfx_clip_t *clip);
+LIBAPI void gfx_blit_scale(gfx_t *dst, gfx_t *src, gfx_blend_t mode, const gfx_clip_t *clip_dst, const gfx_clip_t *clip_src);
+
+LIBAPI uint32_t gfx_alpha_blend(uint32_t low, uint32_t upr);
+LIBAPI uint32_t gfx_upper_alpha_blend(uint32_t low, uint32_t upr);
+LIBAPI uint32_t gfx_selected_blend(uint32_t low, uint32_t upr);
+LIBAPI uint32_t gfx_select_color(uint32_t color);
 
 
-uint32_t gfx_alpha_blend(uint32_t low, uint32_t upr);
-uint32_t gfx_upper_alpha_blend(uint32_t low, uint32_t upr);
-
-
-
+/* Font operations
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
+LIBAPI int gfx_glyph(gfx_t *gfx, gfx_font_t *font, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip);
+LIBAPI int gfx_write(gfx_t *gfx, gfx_font_t *font, const char *text, uint32_t fg, int x, int y, const gfx_clip_t *clip);
+LIBAPI gfx_font_t * gfx_font(const char *family, float size, int style);
+LIBAPI void gfx_clear_font(gfx_font_t *font);
+LIBAPI int gfx_mesure_text(gfx_font_t *font, const char *text, gfx_text_metrics_t *metrics);
 
 
 /* Helpers
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-void gfx_clipboard_copy(const char *buf, int len);
-int gfx_clipboard_paste(char *buf, int len);
-void gfx_keyboard_load(gfx_seat_t *seat);
-int gfx_keyboard_down(int key, gfx_seat_t *seat, int *key2);
-int gfx_keyboard_up(int key, gfx_seat_t *seat);
+LIBAPI void gfx_clipboard_copy(const char *buf, int len);
+LIBAPI int gfx_clipboard_paste(char *buf, int len);
 
-int gfx_handle(gfx_t *gfx, gfx_msg_t *msg, gfx_seat_t *seat);
-gfx_t *gfx_opend(int fd, int fi);
-int gfx_push_msg(gfx_t *gfx, int type, int param);
-void gfx_invalid(gfx_t *gfx);
+// void gfx_keyboard_load(gfx_seat_t *seat);
+// int gfx_keyboard_down(int key, gfx_seat_t *seat, int *key2);
+// int gfx_keyboard_up(int key, gfx_seat_t *seat);
 
+// void gfx_invalid(gfx_t *gfx);
 
 // Context
-
-void *gfx_open_framebuffer(const char *path);
-int gfx_fb_open_input(void *ctx, const char *path);
 
 
 

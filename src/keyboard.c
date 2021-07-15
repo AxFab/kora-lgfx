@@ -74,7 +74,7 @@ int kdb_layout_US_international[128][4] = {
     { -('\''), -('"'), 0xB4, 0xA8 }, // 28
     { -('`'), -('~'), _K2(0) }, // 29
     { _K4(KEY_LSHIFT) }, // 2A
-    K4(0), // 2B
+    { '\\', '|', _K2(0), }, // 2B
     { 'z', 'Z', 0xE6, 0xC6 }, // 2C - Z
     { 'x', 'X', _K2(0) }, // 2D
     { 'c', 'C', 0xA9, 0xA2 }, // 2E
@@ -202,8 +202,8 @@ int kdb_layout_alt_US_international[][4] = {
 
 void gfx_keyboard_load(gfx_seat_t *seat)
 {
-    seat->kdb_layout = kdb_layout_US_international;
-    seat->kdb_alt_layout = kdb_layout_alt_US_international;
+    seat->kdb_layout = (int*)kdb_layout_US_international;
+    seat->kdb_alt_layout = (int*)kdb_layout_alt_US_international;
 }
 
 int gfx_keyboard_down(int key, gfx_seat_t *seat, int *key2)

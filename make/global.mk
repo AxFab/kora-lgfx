@@ -75,10 +75,10 @@ endif
 
 
 define fn_objs
-	$(patsubst $(topdir)/%.c,$(outdir)/%.o,$(patsubst $(topdir)/%.$(ASM_EXT),$(outdir)/%.o,$($(1))))
+	$(patsubst $(srcdir)/%.c,$(outdir)/%.o,$(patsubst $(srcdir)/%.$(ASM_EXT),$(outdir)/%.o,$($(1))))
 endef
 define fn_deps
-	$(patsubst $(topdir)/%.c,$(outdir)/%.d,$(patsubst $(topdir)/%.$(ASM_EXT),,$($(1))))
+	$(patsubst $(srcdir)/%.c,$(outdir)/%.d,$(patsubst $(srcdir)/%.$(ASM_EXT),,$($(1))))
 endef
 define fn_inst
 	$(patsubst $(gendir)/%,$(prefix)/%,$(1))

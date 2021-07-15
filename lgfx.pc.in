@@ -1,10 +1,10 @@
-exec_prefix=${prefix}
+exec_prefix=${prefix}/bin
 includedir=${prefix}/include
-libdir=${exec_prefix}/lib
+libdir=${prefix}/lib
 
-Name: lgfx
+Name: libgfx
 Version: ${version}
-URL: https://github.com/AxFab/kora-lgfx
+URL: https://gitlab.com/axfab/kora-libgfx
 Description: Basic interface to manipulate image buffer and frames.
 Cflags: -I${includedir}
 Libs: -L${libdir} -lgfx

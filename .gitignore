@@ -5,12 +5,14 @@
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 # We use a BLACK-LIST for folders
 [Bb]in/
+[Ll]ib/
 [Oo]bj/
 [Cc]overage/
 [Cc]ov_*/
 [Bb]uild*/
 [Tt]ools/
 [Dd]ebug/
+[Rr]elease/
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 # We use a WHITE-LIST for files

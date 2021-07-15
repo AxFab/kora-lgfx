@@ -1,10 +1,35 @@
+/*
+ *      This file is part of the KoraOS project.
+ *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *   - - - - - - - - - - - - - - -
+ */
 #include "gfx.h"
 #include "keycodes.h"
 
-int gfx_handle(gfx_t *gfx, gfx_msg_t *msg, gfx_seat_t *seat)
+int gfx_keyboard_down(int key, gfx_seat_t *seat, int *key2);
+int gfx_keyboard_up(int key, gfx_seat_t *seat);
+
+LIBAPI void gfx_handle(gfx_msg_t *msg)
 {
     int key, key2, x, y;
-    seat->rel_x = seat->rel_y = 0;
+    gfx_t* gfx = msg->gfx;
+    gfx_seat_t* seat = gfx ? gfx->seat : NULL;
+    if (seat)
+        seat->rel_x = seat->rel_y = 0;
 
     switch (msg->message) {
     // TODO - Drag&Drop, Exposed/Hidden, MouseOver/out,
@@ -32,13 +57,13 @@ int gfx_handle(gfx_t *gfx, gfx_msg_t *msg, gfx_seat_t *seat)
     case GFX_EV_KEYUP:
         key = gfx_keyboard_up(msg->param1, seat);
         break;
-    case GFX_EV_TIMER:
+    /*case GFX_EV_TIMER:
         if (gfx->flags & GFX_FL_INVALID && gfx->flags & GFX_FL_PAINTTICK)
             gfx_push(gfx, GFX_EV_PAINT, 0);
-        break;
-    case GFX_EV_PAINT:
+        break;*/
+    /*case GFX_EV_PAINT:
         gfx->flags &= ~GFX_FL_INVALID;
-        break;
+        break;*/
     case GFX_EV_RESIZE:
         gfx_unmap(gfx);
         gfx->width = msg->param1 >> 16;
@@ -47,13 +72,6 @@ int gfx_handle(gfx_t *gfx, gfx_msg_t *msg, gfx_seat_t *seat)
     default:
         break;
     }
-    return msg->message;
-}
-
-
-void gfx_invalid(gfx_t *gfx)
-{
-    gfx->flags |= GFX_FL_INVALID;
 }
 
 
