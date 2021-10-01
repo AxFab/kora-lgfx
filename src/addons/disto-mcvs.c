@@ -27,22 +27,36 @@
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-LIBAPI void gfx_clipboard_copy(const char *buf, int len)
+LIBAPI int gfx_clipboard_copy(const char *buf, int len)
 {
+    if (buf == NULL)
+        return -1;
     HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
-    memcpy(GlobalLock(hMem), buf, len);
+    if (hMem == 0)
+        return -1;
+    LPVOID ptr = GlobalLock(hMem);
+    if (ptr == NULL)
+        return -1;
+    memcpy(ptr, buf, len);
     GlobalUnlock(hMem);
     OpenClipboard(0);
     EmptyClipboard();
     SetClipboardData(CF_TEXT, hMem);
     CloseClipboard();
+    return len;
 }
 
 LIBAPI int gfx_clipboard_paste(char *buf, int len)
 {
+    if (buf == NULL)
+        return -1;
     OpenClipboard(0);
     HGLOBAL hMem = GetClipboardData(CF_TEXT);
+    if (hMem == 0)
+        return -1;
     void *ptr = GlobalLock(hMem);
+    if (ptr == NULL)
+        return -1;
     int size = GlobalSize(hMem);
     if (size < len)
         memcpy(buf, ptr, size);
@@ -168,6 +182,10 @@ int gfx_open_window(gfx_t *gfx)
     }
 
     gfxhandle_t* handle = calloc(sizeof(gfxhandle_t), 1);
+    if (handle == NULL) {
+        free(gfx);
+        return -1;
+    }
     handle->gfx = gfx;
     handle->hwnd = (HWND)gfx->fd;
     handle->next = __handle;
@@ -328,7 +346,7 @@ int gfx_push(gfx_t *gfx, int type, int param)
 unsigned gfx_timer(int delay, int interval)
 {
     if (interval != 0) {
-        UINT timer;
+        UINT timer = 0;
         SetTimer(NULL, (UINT_PTR)&timer, interval, NULL);
         return timer;
     }

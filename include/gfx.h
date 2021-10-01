@@ -232,7 +232,7 @@ LIBAPI int gfx_mesure_text(gfx_font_t *font, const char *text, gfx_text_metrics_
 
 /* Helpers
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-LIBAPI void gfx_clipboard_copy(const char *buf, int len);
+LIBAPI int gfx_clipboard_copy(const char *buf, int len);
 LIBAPI int gfx_clipboard_paste(char *buf, int len);
 
 // void gfx_keyboard_load(gfx_seat_t *seat);

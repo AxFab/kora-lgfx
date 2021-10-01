@@ -53,10 +53,10 @@ LIBAPI int gfx_write(gfx_t *gfx, gfx_font_t *font, const char *text, uint32_t fg
 {
 #if defined __USE_FREETYPE
     if (font->mode == GFX_FT_FREETYPE)
-        gfx_write_prepare_freetype(gfx, font);
+        gfx_write_prepare_freetype(font);
 #endif
 
-    int unicode, len, w;
+    wchar_t unicode, len, w;
     while (*text) {
         len = mbtowc(&unicode, text, 6);
         if (len == 0)

@@ -23,6 +23,11 @@
 #include <png.h>
 #include "gfx.h"
 
+
+#ifndef __USE_PNG
+# error Compiling png addon, but forgot to define __USE_PNG
+#endif
+
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
 int gfx_png_error_ptr;

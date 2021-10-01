@@ -25,6 +25,11 @@
 #include <freetype/ftsnames.h>
 #include "../mcrs.h"
 
+#ifndef __USE_FREETYPE
+# error Compiling freetype addon, but forgot to define __USE_FREETYPE
+#endif
+
+
 FT_Library library;
 bool __freetype_initialized = false;
 
@@ -86,47 +91,103 @@ int gfx_mesure_freetype(FT_Face face, const char* text, gfx_text_metrics_t* metr
     return 0;
 }
 
+void _gfx_list_fonts_win32()
+{
+    FT_Error fterror;
+    char buf[BUFSIZ];
+    static const char* system_dir = "C:/Windows/Fonts";
+    struct dirent de;
+    void* p;
+    DIR* dir = opendir(system_dir);
+    for (;;) {
+        readdir_r(dir, &de, &p);
+        if (p == NULL)
+            break;
+
+        FT_Face face;
+        snprintf(buf, BUFSIZ, "%s/%s", system_dir, de.d_name);
+        fterror = FT_New_Face(library, buf, 0, &face);
+        if (fterror != 0)
+            continue;
+        printf("- %s : %s (%s)\n", de.d_name, face->family_name, face->style_name);
+        int num = 0; // face->num_faces;
+        FT_Done_Face(face);
+        for (int i = 1; i < num; ++i) {
+            fterror = FT_New_Face(library, buf, i, &face);
+            if (fterror != 0)
+                continue;
+            printf("- %s : %s (%s)\n", de.d_name, face->family_name, face->style_name);
+            FT_Done_Face(face);
+        }
+    }
+    closedir(dir);
+}
+
+int _gfx_search_fonts_win32(const char *family, char *buf)
+{
+    FT_Error fterror;
+    static const char* system_dir = "C:/Windows/Fonts";
+    struct dirent de;
+    void* p;
+    DIR* dir = opendir(system_dir);
+    for (;;) {
+        readdir_r(dir, &de, &p);
+        if (p == NULL)
+            break;
+
+        FT_Face face;
+        snprintf(buf, BUFSIZ, "%s/%s", system_dir, de.d_name);
+        fterror = FT_New_Face(library, buf, 0, &face);
+        if (fterror != 0)
+            continue;
+        // printf("- %s : %s (%s)\n", de.d_name, face->family_name, face->style_name);
+        if (strcmp(face->family_name, family) == 0 && strcmp(face->style_name, "Regular") == 0) {
+            FT_Done_Face(face);
+            return 0;
+        }
+        int num = 0; // face->num_faces;
+        FT_Done_Face(face);
+        for (int i = 1; i < num; ++i) {
+            fterror = FT_New_Face(library, buf, i, &face);
+            if (fterror != 0)
+                continue;
+            // printf("- %s : %s (%s)\n", de.d_name, face->family_name, face->style_name);
+            if (strcmp(face->family_name, family) == 0 && strcmp(face->style_name, "Regular") == 0) {
+                FT_Done_Face(face);
+                return num;
+            }
+            FT_Done_Face(face);
+        }
+    }
+    closedir(dir);
+    return -1;
+}
+
 gfx_font_t* gfx_load_freetype(const char* family, float size, int style)
 {
     static const char* system_dir = "C:/Windows/Fonts";
+
     FT_Error fterror;
-    FT_Face face;
+    FT_Face face = NULL;
     char buf[BUFSIZ];
     if (!__freetype_initialized) {
         fterror = FT_Init_FreeType(&library);
         __freetype_initialized = true;
-
-        struct dirent de;
-        void* p;
-        DIR* dir = opendir(system_dir);
-        for (;;) {
-            readdir_r(dir, &de, &p);
-            if (p == NULL)
-                break;
-
-            FT_Face face;
-            snprintf(buf, BUFSIZ, "%s/%s", system_dir, de.d_name);
-            fterror = FT_New_Face(library, buf, 0, &face);
-            if (fterror != 0)
-                continue;
-            // printf("- %s : %s (%s)\n", de.d_name, face->family_name, face->style_name);
-            int num = 0; // face->num_faces;
-            FT_Done_Face(face);
-            for (int i = 1; i < num; ++i) {
-                fterror = FT_New_Face(library, buf, i, &face);
-                if (fterror != 0)
-                    continue;
-                // printf("- %s : %s (%s)\n", de.d_name, face->family_name, face->style_name);
-                FT_Done_Face(face);
-            }
-        }
-        closedir(dir);
     }
-    snprintf(buf, BUFSIZ, "%s/%s", system_dir, "consola.ttf");
-    fterror = FT_New_Face(library, buf, 0, &face);
-    if (fterror != 0)
-        return NULL;
-    
+
+    int num = _gfx_search_fonts_win32(family, buf);
+    if (num >= 0) {
+        fterror = FT_New_Face(library, buf, num, &face);
+        if (fterror != 0)
+            num = -1;
+    }
+    if (num < 0) {
+        snprintf(buf, BUFSIZ, "%s/%s", system_dir, "consola.ttf");
+        fterror = FT_New_Face(library, buf, 0, &face);
+        if (fterror != 0)
+            return NULL;
+    }
+
     gfx_font_t* font = malloc(sizeof(gfx_font_t));
     font->mode = GFX_FT_FREETYPE;
     font->size = size;
