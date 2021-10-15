@@ -25,8 +25,8 @@
 LIBAPI void *gfx_map(gfx_t *gfx)
 {
     if (gfx->pixels == NULL) {
-        if (gfx->fd != -1)
-            gfx_map_window(gfx);
+        if (gfx->map != NULL)
+            gfx->map(gfx);
         else
             gfx->pixels = malloc(gfx->pitch * gfx->height);
     }
@@ -37,11 +37,19 @@ LIBAPI void gfx_unmap(gfx_t *gfx)
 {
     if (gfx->pixels == NULL)
         return;
-    if (gfx->fd != -1)
-        gfx_unmap_window(gfx);
+    if (gfx->unmap != NULL)
+        gfx->unmap(gfx);
     else
         free(gfx->pixels);
     gfx->pixels = NULL;
+    gfx->backup = NULL;
+}
+
+LIBAPI int gfx_flip(gfx_t* gfx, gfx_clip_t *clip)
+{
+    if (gfx->flip != NULL)
+        return gfx->flip(gfx, clip);
+    return -1;
 }
 
 int gfx_width(gfx_t *gfx)
@@ -59,11 +67,13 @@ int gfx_height(gfx_t *gfx)
 LIBAPI int gfx_resize(gfx_t *gfx, int width, int height)
 {
     gfx_unmap(gfx);
-    if (gfx->fd != -1)
-        return -1;
+    // if (gfx->map != NULL)
+    //     return -1;
     gfx->pitch = ALIGN_UP(width * 4, 4);
     gfx->width = width;
     gfx->height = height;
+    if (gfx->resize != NULL)
+        gfx->resize(gfx);
     return 0;
 }
 

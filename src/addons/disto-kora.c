@@ -161,15 +161,8 @@ int gfx_flip(gfx_t *gfx)
 gfx_msg_t msg_pool[8];
 int msg_ptr = 0;
 
-int gfx_poll(gfx_msg_t *msg)
+int gfx_poll_win(gfx_msg_t *msg)
 {
-    char tmp[120];
-    if (msg_ptr > 0) {
-        msg_ptr--;
-        memcpy(msg, &msg_pool[msg_ptr], sizeof(*msg));
-        snprintf(tmp, 120, "Event recv <%d:%x.%x>", msg->message, msg->param1, msg->param2);
-        return 0;
-    }
     for (;;) {
         gfx_eventmsg_t emsg;
         if (read(input_fd, (char *)&emsg, sizeof(emsg)) != 0) {
@@ -184,19 +177,6 @@ int gfx_poll(gfx_msg_t *msg)
             return 0;
         }
     }
-}
-
-
-int gfx_push(gfx_t *gfx, int type, int param)
-{
-    (void)gfx; // TODO -- WRITE ON PIPE!!
-    gfx_msg_t msg;
-    msg.message = type;
-    msg.param1 = param;
-    memcpy(&msg_pool[msg_ptr], &msg, sizeof(msg));
-    msg_ptr++;
-    // write(gfx->fi, (char*)&msg, sizeof(msg));
-    return 0;
 }
 
 unsigned gfx_timer(int delay, int interval)

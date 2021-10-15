@@ -22,15 +22,16 @@
 
 #include "gfx.h"
 
+extern gfx_ctx_t gfx_ctx_win32;
+extern gfx_ctx_t gfx_ctx_x11;
+extern gfx_ctx_t gfx_ctx_kora;
+extern gfx_ctx_t gfx_ctx_wns;
 
-int gfx_open_device(gfx_t* gfx, const char* path);
-
-int gfx_open_window(gfx_t *gfx);
-int gfx_close_window(gfx_t *gfx);
-
-void gfx_map_window(gfx_t *gfx);
-void gfx_unmap_window(gfx_t *gfx);
-
+struct gfx_ctx {
+    int (*open)(gfx_t*);
+    int (*poll)(gfx_msg_t*);
+    int (*timer)(int delay, int interval);
+};
 
 
 #endif  /* _GFX_DISTO_H */

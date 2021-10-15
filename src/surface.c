@@ -24,16 +24,28 @@
 #include "mcrs.h"
 #include "disto.h"
 
+gfx_ctx_t* __gfx_ctx = &gfx_ctx_wns;
 
-LIBAPI gfx_t* gfx_create_window(void* ctx, int width, int height)
+LIBAPI gfx_ctx_t* gfx_context(const char* name)
+{
+    if (name == NULL)
+        return __gfx_ctx;
+    if (stricmp(name, "win32") == 0)
+        __gfx_ctx = &gfx_ctx_win32;
+    if (stricmp(name, "wns") == 0)
+        __gfx_ctx = &gfx_ctx_wns;
+    return __gfx_ctx;
+}
+
+LIBAPI gfx_t* gfx_create_window(int width, int height)
 {
     width = MAX(1, MIN(16383, width));
     height = MAX(1, MIN(16383, height));
 
     gfx_t* gfx = gfx_create_surface(width, height);
     gfx->seat = calloc(sizeof(gfx_seat_t), 1);
-    // gfx->flags = GFX_FL_INVALID | GFX_FL_EXPOSED;
-    if (ctx == NULL && gfx_open_window(gfx) == 0)
+    gfx_ctx_t* ctx = gfx_context(NULL);
+     if (ctx->open(gfx) == 0)
         return gfx;
 
     free(gfx);
@@ -43,6 +55,8 @@ LIBAPI gfx_t* gfx_create_window(void* ctx, int width, int height)
 LIBAPI gfx_t* gfx_create_surface(int width, int height)
 {
     gfx_t* gfx = calloc(sizeof(gfx_t), 1);
+    if (gfx == NULL)
+        return NULL;
     gfx->width = width;
     gfx->height = height;
     gfx->pitch = ALIGN_UP(width * 4, 4);
@@ -50,25 +64,25 @@ LIBAPI gfx_t* gfx_create_surface(int width, int height)
     return gfx;
 }
 
-LIBAPI gfx_t* gfx_open_surface(const char* path)
-{
-    gfx_t* gfx = calloc(sizeof(gfx_t), 1);
-    if (gfx_open_device(gfx, path) == -1) {
-        free(gfx);
-        return NULL;
-    }
-
-    gfx->seat = calloc(sizeof(gfx_seat_t), 1);
-    gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
-    return gfx;
-}
+//LIBAPI gfx_t* gfx_open_surface(const char* path)
+//{
+//    gfx_t* gfx = calloc(sizeof(gfx_t), 1);
+//    if (gfx_open_device(gfx, path) == -1) {
+//        free(gfx);
+//        return NULL;
+//    }
+//
+//    gfx->seat = calloc(sizeof(gfx_seat_t), 1);
+//    gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
+//    return gfx;
+//}
 
 
 LIBAPI void gfx_destroy(gfx_t* gfx)
 {
     gfx_unmap(gfx);
-    if (gfx->fd != -1)
-        gfx_close_window(gfx);
+    if (gfx->close != NULL)
+        gfx->close(gfx);
     if (gfx->seat)
         free(gfx->seat);
     free(gfx);

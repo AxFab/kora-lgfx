@@ -50,6 +50,7 @@
 #define GFX_ARGB(a,r,g,b)  ((b & 0xff) | ((g & 0xff) << 8) | ((r & 0xff) << 16) | ((a & 0xff) << 24))
 #define GFX_RGB(a,r,g,b)  ((b & 0xff) | ((g & 0xff) << 8) | ((r & 0xff) << 16) | 0xff000000)
 
+typedef struct gfx_ctx gfx_ctx_t;
 typedef enum gfx_blend gfx_blend_t;
 typedef enum gfx_event gfx_event_t;
 typedef struct gfx gfx_t;
@@ -100,12 +101,20 @@ enum gfx_font_style {
     GFX_FONT_WEIGHT_MASK = 0xF,
 };
 
+enum {
+    GFXFT_REGULAR = 0,
+    GFXFT_BOLD = 1,
+    GFXFT_ITALIC = 2,
+    GFXFT_BLACK = 4,
+    GFXFT_SOLID = 7,
+    GFXFT_END = 8,
+};
+
 struct gfx {
     int width;
     int height;
     int pitch;
     uint32_t uid;
-    // int flags;
     union {
         uint8_t* pixels;
         uint32_t* pixels4;
@@ -115,6 +124,11 @@ struct gfx {
         uint32_t* backup4;
     };
     long fd;
+    int (*map)(gfx_t*);
+    int (*unmap)(gfx_t*);
+    int (*flip)(gfx_t*, gfx_clip_t*);
+    int (*resize)(gfx_t*);
+    int (*close)(gfx_t*);
     gfx_seat_t *seat;
 };
 
@@ -174,11 +188,15 @@ struct gfx_placement {
 };
 
 
+#define GFX_POINT(x,y)   ((x)|((y)<<16))
+#define GFX_POINT_RD(x,y,v)  do { x=(v)&0x7fff; y=((v)>>16)&0x7fff; } while(0)
+
 /* Surface creation
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-LIBAPI gfx_t *gfx_create_window(void *ctx, int width, int height);
+LIBAPI gfx_ctx_t* gfx_context(const char* name);
+LIBAPI gfx_t *gfx_create_window(int width, int height);
 LIBAPI gfx_t* gfx_create_surface(int width, int height);
-LIBAPI gfx_t* gfx_open_surface(const char* path);
+// LIBAPI gfx_t* gfx_open_surface(const char* path);
 LIBAPI void gfx_destroy(gfx_t *gfx);
 LIBAPI gfx_t *gfx_load_image(const char * path);
 LIBAPI int gfx_save_image(gfx_t *gfx, const char* path);
@@ -198,8 +216,7 @@ LIBAPI void gfx_unmap(gfx_t *gfx);
 int gfx_width(gfx_t* gfx);
 int gfx_height(gfx_t* gfx);
 LIBAPI int gfx_resize(gfx_t* gfx, int width, int height);
-LIBAPI int gfx_flip(gfx_t *gfx);
-
+LIBAPI int gfx_flip(gfx_t *gfx, gfx_clip_t* clip);
 
 /* Event operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */

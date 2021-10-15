@@ -18,6 +18,7 @@
  *   - - - - - - - - - - - - - - -
  */
 #include "gfx.h"
+#include "disto.h"
 #include "keycodes.h"
 
 int gfx_keyboard_down(int key, gfx_seat_t *seat, int *key2);
@@ -57,17 +58,8 @@ LIBAPI void gfx_handle(gfx_msg_t *msg)
     case GFX_EV_KEYUP:
         key = gfx_keyboard_up(msg->param1, seat);
         break;
-    /*case GFX_EV_TIMER:
-        if (gfx->flags & GFX_FL_INVALID && gfx->flags & GFX_FL_PAINTTICK)
-            gfx_push(gfx, GFX_EV_PAINT, 0);
-        break;*/
-    /*case GFX_EV_PAINT:
-        gfx->flags &= ~GFX_FL_INVALID;
-        break;*/
     case GFX_EV_RESIZE:
-        gfx_unmap(gfx);
-        gfx->width = msg->param1 >> 16;
-        gfx->height = msg->param1 & 0xffff;
+        gfx_resize(gfx, msg->param1 & 0xffff, msg->param1 >> 16);
         break;
     default:
         break;
@@ -75,3 +67,44 @@ LIBAPI void gfx_handle(gfx_msg_t *msg)
 }
 
 
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+#define MSG_POOL_SIZE 16
+gfx_msg_t msg_pool[MSG_POOL_SIZE];
+int msg_ptr = 0;
+
+int gfx_poll(gfx_msg_t *msg)
+{
+    char tmp[120];
+    if (msg_ptr > 0) {
+        msg_ptr--;
+        memcpy(msg, &msg_pool[msg_ptr], sizeof(*msg));
+        // snprintf(tmp, 120, "Event recv <%d:%x.%x>", msg->message, msg->param1, msg->param2);
+        return 0;
+    }
+
+    gfx_ctx_t* ctx = gfx_context(NULL);
+    return ctx->poll(msg);
+}
+
+
+int gfx_push(gfx_t *gfx, int type, int param)
+{
+    if (msg_ptr >= MSG_POOL_SIZE)
+        return -1;
+    gfx_msg_t *msg = &msg_pool[msg_ptr++];
+    msg->message = type;
+    msg->param1 = param;
+    msg->gfx = gfx;
+    return 0;
+}
+
+
+
+int gfx_timer(int delay, int interval)
+{
+    gfx_ctx_t* ctx = gfx_context(NULL);
+    if (ctx->timer != NULL)
+        return ctx->timer(delay, interval);
+    return -1;
+}

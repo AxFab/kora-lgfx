@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <tchar.h>
+#include "../disto.h"
 #include "../mcrs.h"
 
 #define COLOR_REF(n)  ( (((n) & 0xFF0000) >> 16) | ((n) & 0xFF00) | (((n) & 0xFF) << 16) )
@@ -98,6 +99,28 @@ gfx_t* __gfx_from_hwnd(HWND hwnd)
     return handle->gfx;
 }
 
+void __gfx_rm_hwnd(HWND hwnd)
+{
+    if (__handle == NULL)
+        return;
+
+    gfxhandle_t* handle = __handle;
+    if (__handle->hwnd == hwnd) {
+        __handle = __handle->next;
+        free(handle);
+        return;
+    }
+
+    while (handle->next && handle->next->hwnd != hwnd)
+        handle = handle->next;
+
+    if (handle->next && handle->next->hwnd == hwnd) {
+        gfxhandle_t* old = handle->next;
+        handle->next = handle->next->next;
+        free(old);
+    }
+}
+
 LRESULT CALLBACK WndProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
     gfx_t* gfx = __gfx_from_hwnd(hwnd);
@@ -107,7 +130,6 @@ LRESULT CALLBACK WndProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In
         break;
     case WM_DESTROY:
         gfx_push(gfx, GFX_EV_QUIT, 0);
-        // PostQuitMessage(0);
         break;
     case WM_ERASEBKGND:
         return 1;
@@ -168,7 +190,49 @@ void _gfx_paint(HWND hwnd, gfx_t *gfx)
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-int gfx_open_window(gfx_t *gfx)
+void gfx_map_win32(gfx_t* gfx)
+{
+    RECT rect;
+    if (GetClientRect((HWND)gfx->fd, &rect) != FALSE) {
+        gfx->width = rect.right;
+        gfx->height = rect.bottom;
+        gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
+    }
+    gfx->pixels = _aligned_malloc(gfx->pitch * gfx->height, 1024 * 16);
+}
+
+void gfx_unmap_win32(gfx_t* gfx)
+{
+    if (gfx->pixels != NULL) {
+        _aligned_free(gfx->pixels);
+        gfx->pixels = NULL;
+    }
+}
+
+int gfx_flip_win32(gfx_t* gfx, gfx_clip_t *clip)
+{
+    HWND hwnd = (HWND)gfx->fd;
+    RECT r;
+    r.left = clip ? clip->left : 0;
+    r.top = clip ? clip->top : 0;
+    r.right = clip ? clip->right : gfx->width;
+    r.bottom = clip ? clip->bottom : gfx->height;
+    InvalidateRect(hwnd, &r, FALSE);
+    return 0;
+}
+
+int gfx_close_win32(gfx_t* gfx)
+{
+    HWND hwnd = (HWND)gfx->fd;
+    DestroyWindow(hwnd);
+    if (gfx->pixels)
+        _aligned_free(gfx->pixels);
+
+    __gfx_rm_hwnd(hwnd);
+    return 0;
+}
+
+int gfx_open_win32(gfx_t *gfx)
 {
     if (appInstance == NULL)
         gfx_win32_init_();
@@ -195,70 +259,16 @@ int gfx_open_window(gfx_t *gfx)
     // UINT timer;
     // SetTimer((HWND)gfx->fd, (UINT_PTR)&timer, 25, NULL);
     // gfx->flags = GFX_FL_PAINTTICK | GFX_FL_INVALID;
+    gfx->map = gfx_map_win32;
+    gfx->unmap = gfx_unmap_win32;
+    gfx->flip = gfx_flip_win32;
+    gfx->close = gfx_close_win32;
     return 0;
-}
-
-int gfx_close_window(gfx_t *gfx)
-{
-    HWND hwnd = (HWND)gfx->fd;
-    DestroyWindow(hwnd);
-    if (gfx->pixels)
-        _aligned_free(gfx->pixels);
-
-    gfxhandle_t* handle = __handle;
-    if (__handle->hwnd == hwnd)
-        __handle = __handle->next;
-    else {
-        while (handle->next->hwnd != hwnd)
-            handle = handle->next;
-        gfxhandle_t* tmp = handle->next;
-        handle->next = handle->next->next;
-        handle = tmp;
-    }
-    free(handle);
-
-    return 0;
-}
-
-int gfx_open_device(gfx_t *gfx, const char* path)
-{
-    return -1;
 }
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-LIBAPI int gfx_flip(gfx_t *gfx)
-{
-    HWND hwnd = (HWND)gfx->fd;
-    RECT r;
-    r.left = 0;
-    r.top = 0;
-    r.right = gfx->width;
-    r.bottom = gfx->height;
-    InvalidateRect(hwnd, &r, FALSE);
-    return 0;
-}
-
-void gfx_map_window(gfx_t *gfx)
-{
-    RECT rect;
-    if (GetClientRect((HWND)gfx->fd, &rect) != FALSE) {
-        gfx->width = rect.right;
-        gfx->height = rect.bottom;
-        gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
-    }
-    gfx->pixels = _aligned_malloc(gfx->pitch * gfx->height, 1024 * 16);
-}
-
-void gfx_unmap_window(gfx_t *gfx)
-{
-    if (gfx->pixels != NULL) {
-        _aligned_free(gfx->pixels);
-        gfx->pixels = NULL;
-    }
-}
-
-int gfx_poll(gfx_msg_t *msg)
+int gfx_poll_win32(gfx_msg_t *msg)
 {
     MSG wm;
     for (;;) {
@@ -335,15 +345,7 @@ int gfx_poll(gfx_msg_t *msg)
     }
 }
 
-int gfx_push(gfx_t *gfx, int type, int param)
-{
-    // TODO - Use per-thread pre-queue!
-    HWND hwnd = (HWND)gfx->fd;
-    PostMessage(hwnd, WM_USER + 1, type, param);
-    return 0;
-}
-
-unsigned gfx_timer(int delay, int interval)
+int gfx_timer_win32(int delay, int interval)
 {
     if (interval != 0) {
         UINT timer = 0;
@@ -355,3 +357,9 @@ unsigned gfx_timer(int delay, int interval)
         return 0;
     }
 }
+
+gfx_ctx_t gfx_ctx_win32 = {
+    .open = gfx_open_win32,
+    .poll = gfx_poll_win32,
+    .timer = gfx_timer_win32,
+};

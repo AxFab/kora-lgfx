@@ -32,6 +32,8 @@
 
 FT_Library library;
 bool __freetype_initialized = false;
+// static const char* system_dir = "C:/Windows/Fonts";
+static const char* system_dir = "C:/Users/Aesga/develop/kora/src/desktop/resx/fonts";
 
 void gfx_write_prepare_freetype(gfx_font_t* font)
 {
@@ -67,16 +69,17 @@ int gfx_glyph_freetype(gfx_t* gfx, FT_Face face, uint32_t unicode, uint32_t fg, 
     return slot->advance.x >> 6;
 }
 
+int unichar(char**);
+
 int gfx_mesure_freetype(FT_Face face, const char* text, gfx_text_metrics_t* metrics)
 {
     int width = 0, height = 0, yBearing = 0;
 
     FT_GlyphSlot slot = face->glyph;
     while (*text) {
-        wchar_t unicode;
-        int len = mbtowc(&unicode, text, 6);
-        text += len;
-
+        int unicode = unichar(&text);
+        if (unicode < 0)
+            return -1;
         FT_UInt glyph_index = FT_Get_Char_Index(face, unicode);
         FT_Error fterror = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 
@@ -95,7 +98,6 @@ void _gfx_list_fonts_win32()
 {
     FT_Error fterror;
     char buf[BUFSIZ];
-    static const char* system_dir = "C:/Windows/Fonts";
     struct dirent de;
     void* p;
     DIR* dir = opendir(system_dir);
@@ -123,12 +125,11 @@ void _gfx_list_fonts_win32()
     closedir(dir);
 }
 
-int _gfx_search_fonts_win32(const char *family, char *buf)
+int _gfx_search_fonts_win32(const char *family, const char *style, char *buf)
 {
     FT_Error fterror;
-    static const char* system_dir = "C:/Windows/Fonts";
     struct dirent de;
-    void* p;
+    struct dirent* p;
     DIR* dir = opendir(system_dir);
     for (;;) {
         readdir_r(dir, &de, &p);
@@ -136,12 +137,14 @@ int _gfx_search_fonts_win32(const char *family, char *buf)
             break;
 
         FT_Face face;
+        if (strcmp(de.d_name, ".") == 0 || strcmp(de.d_name, "..") == 0)
+            continue;
         snprintf(buf, BUFSIZ, "%s/%s", system_dir, de.d_name);
         fterror = FT_New_Face(library, buf, 0, &face);
         if (fterror != 0)
             continue;
         // printf("- %s : %s (%s)\n", de.d_name, face->family_name, face->style_name);
-        if (strcmp(face->family_name, family) == 0 && strcmp(face->style_name, "Regular") == 0) {
+        if (strcmp(face->family_name, family) == 0 && strcmp(face->style_name, style) == 0) {
             FT_Done_Face(face);
             return 0;
         }
@@ -152,7 +155,7 @@ int _gfx_search_fonts_win32(const char *family, char *buf)
             if (fterror != 0)
                 continue;
             // printf("- %s : %s (%s)\n", de.d_name, face->family_name, face->style_name);
-            if (strcmp(face->family_name, family) == 0 && strcmp(face->style_name, "Regular") == 0) {
+            if (strcmp(face->family_name, family) == 0 && strcmp(face->style_name, style) == 0) {
                 FT_Done_Face(face);
                 return num;
             }
@@ -163,9 +166,19 @@ int _gfx_search_fonts_win32(const char *family, char *buf)
     return -1;
 }
 
+const char* style_name[] = {
+    "Regular",
+    "Bold", // 1
+    "Italic", // 2
+    "Bold Italic", // 3
+    "Black", // 4
+    "Black", // 5
+    "Black Italic", // 6
+    "Solid", // 7
+};
+
 gfx_font_t* gfx_load_freetype(const char* family, float size, int style)
 {
-    static const char* system_dir = "C:/Windows/Fonts";
 
     FT_Error fterror;
     FT_Face face = NULL;
@@ -174,8 +187,10 @@ gfx_font_t* gfx_load_freetype(const char* family, float size, int style)
         fterror = FT_Init_FreeType(&library);
         __freetype_initialized = true;
     }
+    if (style >= GFXFT_END)
+        style = GFXFT_REGULAR;
 
-    int num = _gfx_search_fonts_win32(family, buf);
+    int num = _gfx_search_fonts_win32(family, style_name[style], buf);
     if (num >= 0) {
         fterror = FT_New_Face(library, buf, num, &face);
         if (fterror != 0)

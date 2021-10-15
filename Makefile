@@ -67,12 +67,6 @@ $(eval $(call link_shared,gfx,SRCS,LFLAGS))
 # 	$(S) cp -RpP -f $(topdir)/gfx.h $(prefix)/include/gfx.h
 # 	$(S) cp -RpP -f $(topdir)/keycodes.h $(prefix)/include/keycodes.h
 
-
-e_dist:
-	@echo $(target_arch)-$(target_os)
-e_srcs:
-	@echo $(SRCS)
-
 check: $(patsubst %,val_%,$(CHECKS))
 
 ifeq ($(NODEPS),)
