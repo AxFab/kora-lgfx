@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -24,37 +24,39 @@
 #include "mcrs.h"
 #include "disto.h"
 
-gfx_ctx_t* __gfx_ctx = &gfx_ctx_wns;
+gfx_ctx_t *__gfx_ctx = &gfx_ctx_wns;
 
-LIBAPI gfx_ctx_t* gfx_context(const char* name)
+LIBAPI gfx_ctx_t *gfx_context(const char *name)
 {
     if (name == NULL)
         return __gfx_ctx;
+#ifdef _WIN32
     if (stricmp(name, "win32") == 0)
         __gfx_ctx = &gfx_ctx_win32;
+#endif
     if (stricmp(name, "wns") == 0)
         __gfx_ctx = &gfx_ctx_wns;
     return __gfx_ctx;
 }
 
-LIBAPI gfx_t* gfx_create_window(int width, int height)
+LIBAPI gfx_t *gfx_create_window(int width, int height)
 {
     width = MAX(1, MIN(16383, width));
     height = MAX(1, MIN(16383, height));
 
-    gfx_t* gfx = gfx_create_surface(width, height);
+    gfx_t *gfx = gfx_create_surface(width, height);
     gfx->seat = calloc(sizeof(gfx_seat_t), 1);
-    gfx_ctx_t* ctx = gfx_context(NULL);
-     if (ctx->open(gfx) == 0)
+    gfx_ctx_t *ctx = gfx_context(NULL);
+    if (ctx->open(gfx) == 0)
         return gfx;
 
     free(gfx);
     return NULL;
 }
 
-LIBAPI gfx_t* gfx_create_surface(int width, int height)
+LIBAPI gfx_t *gfx_create_surface(int width, int height)
 {
-    gfx_t* gfx = calloc(sizeof(gfx_t), 1);
+    gfx_t *gfx = calloc(sizeof(gfx_t), 1);
     if (gfx == NULL)
         return NULL;
     gfx->width = width;
@@ -78,7 +80,7 @@ LIBAPI gfx_t* gfx_create_surface(int width, int height)
 //}
 
 
-LIBAPI void gfx_destroy(gfx_t* gfx)
+LIBAPI void gfx_destroy(gfx_t *gfx)
 {
     gfx_unmap(gfx);
     if (gfx->close != NULL)
@@ -95,15 +97,15 @@ LIBAPI void gfx_destroy(gfx_t* gfx)
 
 
 
-int gfx_load_image_bmp(gfx_t* gfx, int fd);
-int gfx_load_image_tga(gfx_t* gfx, int fd);
-int gfx_load_image_png(gfx_t* gfx, int fd);
+int gfx_load_image_bmp(gfx_t *gfx, int fd);
+int gfx_load_image_tga(gfx_t *gfx, int fd);
+int gfx_load_image_png(gfx_t *gfx, int fd);
 // int gfx_load_image_jpg(gfx_t* gfx, int fd);
 // int gfx_load_image_ppm(gfx_t* gfx, int fd);
 
-int gfx_save_image_bmp(gfx_t* gfx, int fd, int mode);
-int gfx_save_image_tga(gfx_t* gfx, int fd);
-int gfx_save_image_png(gfx_t* gfx, int fd);
+int gfx_save_image_bmp(gfx_t *gfx, int fd, int mode);
+int gfx_save_image_tga(gfx_t *gfx, int fd);
+int gfx_save_image_png(gfx_t *gfx, int fd);
 // int gfx_save_image_jpg(gfx_t* gfx, int fd);
 // int gfx_save_image_ppm(gfx_t* gfx, int fd);
 
@@ -114,10 +116,10 @@ int gfx_save_image_png(gfx_t* gfx, int fd);
 #  define O_BINARY  0
 #endif
 
-LIBAPI gfx_t* gfx_load_image(const char* name)
+LIBAPI gfx_t *gfx_load_image(const char *name)
 {
     int res = -1;
-    gfx_t* gfx = calloc(1, sizeof(gfx_t));
+    gfx_t *gfx = calloc(1, sizeof(gfx_t));
     if (gfx == NULL)
         return NULL;
     gfx->fd = -1;
@@ -142,7 +144,7 @@ LIBAPI gfx_t* gfx_load_image(const char* name)
     return gfx;
 }
 
-LIBAPI int gfx_save_image(gfx_t* gfx, const char* name)
+LIBAPI int gfx_save_image(gfx_t *gfx, const char *name)
 {
     int res = -1;
     int fd = open(name, O_WRONLY | O_CREAT | O_BINARY);

@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2018  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -202,8 +202,8 @@ int kdb_layout_alt_US_international[][4] = {
 
 void gfx_keyboard_load(gfx_seat_t *seat)
 {
-    seat->kdb_layout = (int*)kdb_layout_US_international;
-    seat->kdb_alt_layout = (int*)kdb_layout_alt_US_international;
+    seat->kdb_layout = (int *)kdb_layout_US_international;
+    seat->kdb_alt_layout = (int *)kdb_layout_alt_US_international;
 }
 
 int gfx_keyboard_down(int key, gfx_seat_t *seat, int *key2)
@@ -316,4 +316,3 @@ int gfx_keyboard_up(int key, gfx_seat_t *seat)
         seat->kdb_status ^= KMOD_CAPS;
     return key;
 }
-

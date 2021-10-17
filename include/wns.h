@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -21,9 +21,14 @@
 #define _SRC_WNS_H 1
 
 #include <sys/socket.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <errno.h>
+
+#ifndef SOCKET
+#  define SOCKET int
+#endif
 
 typedef struct wns_cnx wns_cnx_t;
 typedef struct wns_msg wns_msg_t;
@@ -64,10 +69,10 @@ enum {
 
 #define WNS_PORT 8765
 
-void wns_initialize();
-int wns_connect(wns_cnx_t* cnx);
-int wns_send(wns_cnx_t* cnx, wns_msg_t* msg);
-int wns_recv(wns_cnx_t* cnx, wns_msg_t* msg);
+// void wns_initialize();
+// int wns_connect(wns_cnx_t* cnx);
+// int wns_send(wns_cnx_t* cnx, wns_msg_t* msg);
+// int wns_recv(wns_cnx_t* cnx, wns_msg_t* msg);
 
 #define WNS_MSG(m,r,s,w,p,q,t) \
     do { m.request = r; m.secret = s; m.winhdl = w; m.param = p; m.param2 = q; m.param3 = t; } while(0)
@@ -90,22 +95,22 @@ static inline void wns_initialize(void)
     }
     atexit(wns_teardown);
 }
-#else 
+#else
 #define WNS_ERROR errno
-#endif 
+#endif
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-static inline int wns_connect(wns_cnx_t* cnx)
+static inline int wns_connect(wns_cnx_t *cnx)
 {
-    struct sockaddr_in* server = (struct sockaddr_in*)&cnx->remote;
+    struct sockaddr_in *server = (struct sockaddr_in *)&cnx->remote;
     server->sin_family = AF_INET;
     server->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     server->sin_port = htons(WNS_PORT);
 
 #ifdef _WIN32
     wns_initialize();
-#endif 
+#endif
     cnx->rlen = sizeof(*server);
     cnx->sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (cnx->sock == INVALID_SOCKET) {
@@ -115,19 +120,19 @@ static inline int wns_connect(wns_cnx_t* cnx)
     return 0;
 }
 
-static inline int wns_send(wns_cnx_t* cnx, wns_msg_t* msg)
+static inline int wns_send(wns_cnx_t *cnx, wns_msg_t *msg)
 {
-    int ret = sendto(cnx->sock, (char*)msg, sizeof(wns_msg_t), 0, &cnx->remote, cnx->rlen);
+    int ret = sendto(cnx->sock, (char *)msg, sizeof(wns_msg_t), 0, &cnx->remote, cnx->rlen);
     if (ret == SOCKET_ERROR)
         fprintf(stderr, "sendto() failed with code  : %d\n", WNS_ERROR);
     return ret;
 }
 
-static inline int wns_recv(wns_cnx_t* cnx, wns_msg_t* msg)
+static inline int wns_recv(wns_cnx_t *cnx, wns_msg_t *msg)
 {
     int rlen = sizeof(struct sockaddr);
     struct sockaddr raddr;
-    int ret = recvfrom(cnx->sock, (char*)msg, sizeof(wns_msg_t), 0, &raddr, &rlen);
+    int ret = recvfrom(cnx->sock, (char *)msg, sizeof(wns_msg_t), 0, &raddr, &rlen);
     if (ret == SOCKET_ERROR)
         fprintf(stderr, "recvfrom() failed with code  : %d\n", WNS_ERROR);
     return ret;

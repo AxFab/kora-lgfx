@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -199,7 +199,7 @@ int gfx_save_image_bmp(gfx_t *gfx, int fd, int mode)
 
     head.fsize = sizeof(head) + head.isize;
 
-    lseek(fd, 0, SEEK_SET); 
+    lseek(fd, 0, SEEK_SET);
     if (write(fd, &head, sizeof(head)) != sizeof(head)) {
         // fprintf(stderr, "Error persisting image: %d\n", errno);
         return -1;
@@ -214,4 +214,3 @@ int gfx_save_image_bmp(gfx_t *gfx, int fd, int mode)
 
     return -1;
 }
-

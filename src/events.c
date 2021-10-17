@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -27,8 +27,8 @@ int gfx_keyboard_up(int key, gfx_seat_t *seat);
 LIBAPI void gfx_handle(gfx_msg_t *msg)
 {
     int key, key2, x, y;
-    gfx_t* gfx = msg->gfx;
-    gfx_seat_t* seat = gfx ? gfx->seat : NULL;
+    gfx_t *gfx = msg->gfx;
+    gfx_seat_t *seat = gfx ? gfx->seat : NULL;
     if (seat)
         seat->rel_x = seat->rel_y = 0;
 
@@ -83,7 +83,7 @@ int gfx_poll(gfx_msg_t *msg)
         return 0;
     }
 
-    gfx_ctx_t* ctx = gfx_context(NULL);
+    gfx_ctx_t *ctx = gfx_context(NULL);
     return ctx->poll(msg);
 }
 
@@ -103,7 +103,7 @@ int gfx_push(gfx_t *gfx, int type, int param)
 
 int gfx_timer(int delay, int interval)
 {
-    gfx_ctx_t* ctx = gfx_context(NULL);
+    gfx_ctx_t *ctx = gfx_context(NULL);
     if (ctx->timer != NULL)
         return ctx->timer(delay, interval);
     return -1;

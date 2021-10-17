@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -27,22 +27,22 @@
 
 
 PACK(struct tga_header {
-   char  idlength;
-   char  colourmaptype;
-   char  datatypecode;
-   short int colourmaporigin;
-   short int colourmaplength;
-   char  colourmapdepth;
-   short int x_origin;
-   short int y_origin;
-   short width;
-   short height;
-   char  bitsperpixel;
-   char  imagedescriptor;
+    char  idlength;
+    char  colourmaptype;
+    char  datatypecode;
+    short int colourmaporigin;
+    short int colourmaplength;
+    char  colourmapdepth;
+    short int x_origin;
+    short int y_origin;
+    short width;
+    short height;
+    char  bitsperpixel;
+    char  imagedescriptor;
 });
 
 
-void gfx_tga_merge_bytes(gfx_t* gfx, int n, uint8_t *px, int bytes)
+void gfx_tga_merge_bytes(gfx_t *gfx, int n, uint8_t *px, int bytes)
 {
     int x = n % gfx->width;
     int y = gfx->height - 1 - n / gfx->width;
@@ -53,25 +53,25 @@ void gfx_tga_merge_bytes(gfx_t* gfx, int n, uint8_t *px, int bytes)
         gfx->pixels[v * 4 + 1] = px[1];
         gfx->pixels[v * 4 + 0] = px[0];
         gfx->pixels[v * 4 + 3] = px[3];
-   } else if (bytes == 3) {
-       gfx->pixels[v * 4 + 2] = px[2];
-       gfx->pixels[v * 4 + 1] = px[1];
-       gfx->pixels[v * 4 + 0] = px[0];
-       gfx->pixels[v * 4 + 3] = 255;
-   } else if (bytes == 2) {
-       gfx->pixels[v * 4 + 2] = (px[1] & 0x7c) << 1;
-       gfx->pixels[v * 4 + 1] = ((px[1] & 0x03) << 6) | ((px[0] & 0xe0) >> 2);
-       gfx->pixels[v * 4 + 0] = (px[0] & 0x1f) << 3;
-       gfx->pixels[v * 4 + 3] = (px[1] & 0x80);
-   } else if (bytes == 1) {
-       gfx->pixels[v * 4 + 2] = (px[0] & 0xe0);
-       gfx->pixels[v * 4 + 1] = (px[0] & 0x1c) << 3;
-       gfx->pixels[v * 4 + 0] = (px[0] & 0x3) << 6;
-       gfx->pixels[v * 4 + 3] = 255;
-   }
+    } else if (bytes == 3) {
+        gfx->pixels[v * 4 + 2] = px[2];
+        gfx->pixels[v * 4 + 1] = px[1];
+        gfx->pixels[v * 4 + 0] = px[0];
+        gfx->pixels[v * 4 + 3] = 255;
+    } else if (bytes == 2) {
+        gfx->pixels[v * 4 + 2] = (px[1] & 0x7c) << 1;
+        gfx->pixels[v * 4 + 1] = ((px[1] & 0x03) << 6) | ((px[0] & 0xe0) >> 2);
+        gfx->pixels[v * 4 + 0] = (px[0] & 0x1f) << 3;
+        gfx->pixels[v * 4 + 3] = (px[1] & 0x80);
+    } else if (bytes == 1) {
+        gfx->pixels[v * 4 + 2] = (px[0] & 0xe0);
+        gfx->pixels[v * 4 + 1] = (px[0] & 0x1c) << 3;
+        gfx->pixels[v * 4 + 0] = (px[0] & 0x3) << 6;
+        gfx->pixels[v * 4 + 3] = 255;
+    }
 }
 
-void gfx_tga_merge_gray(gfx_t* gfx, int n, uint8_t px)
+void gfx_tga_merge_gray(gfx_t *gfx, int n, uint8_t px)
 {
     int x = n % gfx->width;
     int y = gfx->height - 1 - n / gfx->width;
@@ -83,12 +83,13 @@ void gfx_tga_merge_gray(gfx_t* gfx, int n, uint8_t px)
     gfx->pixels[v * 4 + 3] = 255;
 }
 
-static inline int gfx_error(const char* str) {
+static inline int gfx_error(const char *str)
+{
     fprintf(stderr, str);
     return -1;
 }
 
-int gfx_tga_read_uncompressed(gfx_t* gfx, int fd, int bytesGrp)
+int gfx_tga_read_uncompressed(gfx_t *gfx, int fd, int bytesGrp)
 {
     int n = 0;
     uint8_t px[5];
@@ -100,20 +101,20 @@ int gfx_tga_read_uncompressed(gfx_t* gfx, int fd, int bytesGrp)
     return 0;
 }
 
-int gfx_tga_read_uncompressed_grey(gfx_t* gfx, int fd)
+int gfx_tga_read_uncompressed_grey(gfx_t *gfx, int fd)
 {
     int n = 0;
     uint8_t px[5];
     while (n < gfx->width * gfx->height) {
         if (read(fd, px, 1) != 1)
             return gfx_error("Unexpected end of file\n");
-        
+
         gfx_tga_merge_gray(gfx, n++, px[0]);
     }
     return 0;
 }
 
-int gfx_tga_read_compressed(gfx_t* gfx, int fd, int bytesGrp)
+int gfx_tga_read_compressed(gfx_t *gfx, int fd, int bytesGrp)
 {
     int n = 0;
     uint8_t px[5];
@@ -125,12 +126,10 @@ int gfx_tga_read_compressed(gfx_t* gfx, int fd, int bytesGrp)
         gfx_tga_merge_bytes(gfx, n++, &px[1], bytesGrp);
 
         if (px[0] & 0x80) { /* RLE chunk */
-            for (i = 0; i < j; i++) {
+            for (i = 0; i < j; i++)
                 gfx_tga_merge_bytes(gfx, n++, &px[1], bytesGrp);
-            }
 
-        }
-        else { /* Normal chunk */
+        } else { /* Normal chunk */
             for (i = 0; i < j; i++) {
                 if (read(fd, px, bytesGrp) != bytesGrp)
                     return gfx_error("Unexpected end of file\n");
@@ -141,7 +140,7 @@ int gfx_tga_read_compressed(gfx_t* gfx, int fd, int bytesGrp)
     return 0;
 }
 
-int gfx_tga_read_compressed_gray(gfx_t* gfx, int fd)
+int gfx_tga_read_compressed_gray(gfx_t *gfx, int fd)
 {
     int n = 0;
     uint8_t px[5];
@@ -153,11 +152,9 @@ int gfx_tga_read_compressed_gray(gfx_t* gfx, int fd)
         gfx_tga_merge_gray(gfx, n++, px[1]);
 
         if (px[0] & 0x80) { /* RLE chunk */
-            for (i = 0; i < j; i++) {
+            for (i = 0; i < j; i++)
                 gfx_tga_merge_gray(gfx, n++, px[1]);
-            }
-        }
-        else { /* Normal chunk */
+        } else { /* Normal chunk */
             for (i = 0; i < j; i++) {
                 if (read(fd, px, 1) != 1)
                     return gfx_error("Unexpected end of file\n");
@@ -172,7 +169,7 @@ int gfx_tga_read_compressed_gray(gfx_t* gfx, int fd)
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
 
-int gfx_load_image_tga(gfx_t* gfx, int fd)
+int gfx_load_image_tga(gfx_t *gfx, int fd)
 {
     struct tga_header head;
     if (read(fd, &head, sizeof(head)) != sizeof(head))
@@ -210,7 +207,7 @@ int gfx_load_image_tga(gfx_t* gfx, int fd)
     return -1;
 }
 
-int gfx_save_image_tga(gfx_t* gfx, int fd)
+int gfx_save_image_tga(gfx_t *gfx, int fd)
 {
     // struct tga_header head;
     gfx_map(gfx);
@@ -246,6 +243,3 @@ int gfx_save_image_tga(gfx_t* gfx, int fd)
 
     return -1;
 }
-
-
-

@@ -1,9 +1,29 @@
+/*
+ *      This file is part of the KoraOS project.
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *   - - - - - - - - - - - - - - -
+ */
 #include <gfx.h>
 #include <wns.h>
 #include "disto.h"
 #include "llist.h"
 #include <sys/mman.h>
 #include <unistd.h>
+#include <string.h>
 
 wns_cnx_t __wnscnx;
 int __wnssct = 0;
@@ -12,13 +32,13 @@ int __wnsano = 0;
 llhead_t __wnsgfx = INIT_LLHEAD;
 
 struct lnwin {
-    gfx_t* gfx;
+    gfx_t *gfx;
     llnode_t node;
 };
 
-gfx_t* __find_win(int uid)
+gfx_t *__find_win(int uid)
 {
-    struct lnwin* lnw;
+    struct lnwin *lnw;
     for ll_each(&__wnsgfx, lnw, struct lnwin, node) {
         if (lnw->gfx->uid == uid)
             return lnw->gfx;
@@ -26,44 +46,44 @@ gfx_t* __find_win(int uid)
     return NULL;
 }
 
-void __store_win(gfx_t* gfx)
+void __store_win(gfx_t *gfx)
 {
-    struct lnwin* lnw = malloc(sizeof(struct lnwin));
+    struct lnwin *lnw = malloc(sizeof(struct lnwin));
     lnw->gfx = gfx;
     ll_append(&__wnsgfx, &lnw->node);
 }
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-int gfx_close_wns(gfx_t* gfx)
+int gfx_close_wns(gfx_t *gfx)
 {
     close(gfx->fd);
     return 0;
 }
 
-int gfx_map_wns(gfx_t* gfx)
+int gfx_map_wns(gfx_t *gfx)
 {
-    gfx->pixels = mmap(NULL, gfx->pitch * gfx->height * 2, PROT_WRITE, MMAP_SHARED, gfx->fd, 0);
+    gfx->pixels = mmap(NULL, gfx->pitch * gfx->height * 2, PROT_WRITE, MAP_SHARED, gfx->fd, 0);
     gfx->backup = &gfx->pixels[gfx->pitch * gfx->height];
     return 0;
 }
 
-int gfx_unmap_wns(gfx_t* gfx)
+int gfx_unmap_wns(gfx_t *gfx)
 {
     munmap(gfx->pixels, gfx->pitch * gfx->height * 2);
     return 0;
 }
 
-int gfx_flip2_wns(gfx_t* gfx, gfx_clip_t* clip)
+int gfx_flip2_wns(gfx_t *gfx, gfx_clip_t *clip)
 {
-    void* top = gfx->pixels > gfx->backup ? gfx->pixels : gfx->backup;
-    void* btm = gfx->pixels > gfx->backup ? gfx->backup : gfx->pixels;
+    void *top = gfx->pixels > gfx->backup ? gfx->pixels : gfx->backup;
+    void *btm = gfx->pixels > gfx->backup ? gfx->backup : gfx->pixels;
     gfx->pixels = clip ? top : btm;
     gfx->backup = clip ? btm : top;
     return 0;
 }
 
-int gfx_flip_wns(gfx_t* gfx, gfx_clip_t *clip)
+int gfx_flip_wns(gfx_t *gfx, gfx_clip_t *clip)
 {
     wns_msg_t msg;
     gfx_clip_t rect;
@@ -74,7 +94,7 @@ int gfx_flip_wns(gfx_t* gfx, gfx_clip_t *clip)
     int off = gfx->pixels > gfx->backup ? 1 : 0;
     WNS_MSG(msg, WNS_FLIP, __wnssct, gfx->uid, GFX_POINT(rect.left, rect.top), GFX_POINT(rect.right, rect.bottom), off);
     wns_send(&__wnscnx, &msg);
-    void* tmp = gfx->pixels;
+    void *tmp = gfx->pixels;
     gfx->pixels = gfx->backup;
     gfx->backup = tmp;
     return 0;
@@ -100,7 +120,7 @@ int __gfx_wns_response(wns_msg_t *msg, int expect)
     }
 }
 
-int gfx_open_wns(gfx_t* gfx)
+int gfx_open_wns(gfx_t *gfx)
 {
     wns_msg_t msg;
     if (__wnssct == 0) {
@@ -140,7 +160,7 @@ int gfx_open_wns(gfx_t* gfx)
 LIBAPI gfx_t *gfx_create_wns(int width, int height, int uid)
 {
     char tmp[16];
-    gfx_t* gfx = malloc(sizeof(gfx_t));
+    gfx_t *gfx = malloc(sizeof(gfx_t));
     if (gfx == NULL)
         return NULL;
     memset(gfx, 0, sizeof(gfx_t));
@@ -162,7 +182,7 @@ LIBAPI gfx_t *gfx_create_wns(int width, int height, int uid)
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
-int gfx_poll_wns(gfx_msg_t* msg)
+int gfx_poll_wns(gfx_msg_t *msg)
 {
     if (__wnssct == 0)
         return -1;

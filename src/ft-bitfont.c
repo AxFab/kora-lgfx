@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -24,7 +24,7 @@
 typedef struct font_bmp font_bmp_t;
 
 struct font_bmp {
-    const uint8_t* glyphs;
+    const uint8_t *glyphs;
     char glyph_size;
     char width;
     char height;
@@ -489,7 +489,7 @@ int gfx_mesure_bitfont(const font_bmp_t *face, const char *text, gfx_text_metric
     return 0;
 }
 
-gfx_font_t * gfx_load_bitfont(float size, int style)
+gfx_font_t *gfx_load_bitfont(float size, int style)
 {
     const font_bmp_t *face = NULL;
     if (size <= 8)
@@ -510,7 +510,7 @@ gfx_font_t * gfx_load_bitfont(float size, int style)
     font->size = size;
     font->style = 0;
     font->family = NULL;
-    font->face = (void*)face;
+    font->face = (void *)face;
     return font;
 }
 
@@ -518,4 +518,3 @@ void gfx_clear_bitfont(gfx_font_t *font)
 {
     free(font);
 }
-

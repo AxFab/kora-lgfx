@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -78,19 +78,19 @@ HINSTANCE appInstance = NULL;
 
 typedef struct gfxhandle gfxhandle_t;
 struct gfxhandle {
-    gfx_t* gfx;
+    gfx_t *gfx;
     HWND hwnd;
-    gfxhandle_t* next;
+    gfxhandle_t *next;
 };
 
-gfxhandle_t* __handle = NULL;
-gfx_t* __build_win = NULL;
+gfxhandle_t *__handle = NULL;
+gfx_t *__build_win = NULL;
 
-gfx_t* __gfx_from_hwnd(HWND hwnd)
+gfx_t *__gfx_from_hwnd(HWND hwnd)
 {
     if (__handle == NULL)
         return __build_win;
-    gfxhandle_t* handle = __handle;
+    gfxhandle_t *handle = __handle;
     while (handle->hwnd != hwnd) {
         handle = handle->next;
         if (handle == NULL)
@@ -104,7 +104,7 @@ void __gfx_rm_hwnd(HWND hwnd)
     if (__handle == NULL)
         return;
 
-    gfxhandle_t* handle = __handle;
+    gfxhandle_t *handle = __handle;
     if (__handle->hwnd == hwnd) {
         __handle = __handle->next;
         free(handle);
@@ -115,7 +115,7 @@ void __gfx_rm_hwnd(HWND hwnd)
         handle = handle->next;
 
     if (handle->next && handle->next->hwnd == hwnd) {
-        gfxhandle_t* old = handle->next;
+        gfxhandle_t *old = handle->next;
         handle->next = handle->next->next;
         free(old);
     }
@@ -123,7 +123,7 @@ void __gfx_rm_hwnd(HWND hwnd)
 
 LRESULT CALLBACK WndProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
 {
-    gfx_t* gfx = __gfx_from_hwnd(hwnd);
+    gfx_t *gfx = __gfx_from_hwnd(hwnd);
     switch (uMsg) {
     case WM_CLOSE:
         DestroyWindow(hwnd);
@@ -142,6 +142,7 @@ LRESULT CALLBACK WndProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In
                 gfx->width = rect.right;
                 gfx->height = rect.bottom;
             }
+            gfx_push(gfx, GFX_EV_RESIZE, GFX_POINT(gfx->width, gfx->height));
         }
         break;
     default:
@@ -178,7 +179,7 @@ void _gfx_paint(HWND hwnd, gfx_t *gfx)
     PAINTSTRUCT ps;
     // Find the GFX who match
     HDC hdc = BeginPaint(hwnd, &ps);
-    void* pixels = gfx_map(gfx);
+    void *pixels = gfx_map(gfx);
     HBITMAP backbuffer = CreateBitmap(gfx->width, gfx->height, 1, 32, pixels);
     HDC backbuffDC = CreateCompatibleDC(hdc);
     SelectObject(backbuffDC, backbuffer);
@@ -190,7 +191,7 @@ void _gfx_paint(HWND hwnd, gfx_t *gfx)
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-void gfx_map_win32(gfx_t* gfx)
+void gfx_map_win32(gfx_t *gfx)
 {
     RECT rect;
     if (GetClientRect((HWND)gfx->fd, &rect) != FALSE) {
@@ -201,7 +202,7 @@ void gfx_map_win32(gfx_t* gfx)
     gfx->pixels = _aligned_malloc(gfx->pitch * gfx->height, 1024 * 16);
 }
 
-void gfx_unmap_win32(gfx_t* gfx)
+void gfx_unmap_win32(gfx_t *gfx)
 {
     if (gfx->pixels != NULL) {
         _aligned_free(gfx->pixels);
@@ -209,7 +210,7 @@ void gfx_unmap_win32(gfx_t* gfx)
     }
 }
 
-int gfx_flip_win32(gfx_t* gfx, gfx_clip_t *clip)
+int gfx_flip_win32(gfx_t *gfx, gfx_clip_t *clip)
 {
     HWND hwnd = (HWND)gfx->fd;
     RECT r;
@@ -221,7 +222,7 @@ int gfx_flip_win32(gfx_t* gfx, gfx_clip_t *clip)
     return 0;
 }
 
-int gfx_close_win32(gfx_t* gfx)
+int gfx_close_win32(gfx_t *gfx)
 {
     HWND hwnd = (HWND)gfx->fd;
     DestroyWindow(hwnd);
@@ -245,7 +246,7 @@ int gfx_open_win32(gfx_t *gfx)
         return -1;
     }
 
-    gfxhandle_t* handle = calloc(sizeof(gfxhandle_t), 1);
+    gfxhandle_t *handle = calloc(sizeof(gfxhandle_t), 1);
     if (handle == NULL) {
         free(gfx);
         return -1;
@@ -351,8 +352,7 @@ int gfx_timer_win32(int delay, int interval)
         UINT timer = 0;
         SetTimer(NULL, (UINT_PTR)&timer, interval, NULL);
         return timer;
-    }
-    else {
+    } else {
         // TODO DELAY !?
         return 0;
     }

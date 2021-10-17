@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -45,7 +45,7 @@ LIBAPI void gfx_unmap(gfx_t *gfx)
     gfx->backup = NULL;
 }
 
-LIBAPI int gfx_flip(gfx_t* gfx, gfx_clip_t *clip)
+LIBAPI int gfx_flip(gfx_t *gfx, gfx_clip_t *clip)
 {
     if (gfx->flip != NULL)
         return gfx->flip(gfx, clip);
@@ -76,5 +76,3 @@ LIBAPI int gfx_resize(gfx_t *gfx, int width, int height)
         gfx->resize(gfx);
     return 0;
 }
-
-

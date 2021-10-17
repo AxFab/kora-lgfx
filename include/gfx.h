@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -116,19 +116,19 @@ struct gfx {
     int pitch;
     uint32_t uid;
     union {
-        uint8_t* pixels;
-        uint32_t* pixels4;
+        uint8_t *pixels;
+        uint32_t *pixels4;
     };
     union {
-        uint8_t* backup;
-        uint32_t* backup4;
+        uint8_t *backup;
+        uint32_t *backup4;
     };
     long fd;
-    int (*map)(gfx_t*);
-    int (*unmap)(gfx_t*);
-    int (*flip)(gfx_t*, gfx_clip_t*);
-    int (*resize)(gfx_t*);
-    int (*close)(gfx_t*);
+    int (*map)(gfx_t *);
+    int (*unmap)(gfx_t *);
+    int (*flip)(gfx_t *, gfx_clip_t *);
+    int (*resize)(gfx_t *);
+    int (*close)(gfx_t *);
     gfx_seat_t *seat;
 };
 
@@ -149,7 +149,7 @@ struct gfx_msg {
     uint16_t window;
     uint32_t param1;
     uint32_t param2;
-    gfx_t* gfx;
+    gfx_t *gfx;
 };
 
 struct gfx_clip {
@@ -193,13 +193,13 @@ struct gfx_placement {
 
 /* Surface creation
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-LIBAPI gfx_ctx_t* gfx_context(const char* name);
+LIBAPI gfx_ctx_t *gfx_context(const char *name);
 LIBAPI gfx_t *gfx_create_window(int width, int height);
-LIBAPI gfx_t* gfx_create_surface(int width, int height);
+LIBAPI gfx_t *gfx_create_surface(int width, int height);
 // LIBAPI gfx_t* gfx_open_surface(const char* path);
 LIBAPI void gfx_destroy(gfx_t *gfx);
-LIBAPI gfx_t *gfx_load_image(const char * path);
-LIBAPI int gfx_save_image(gfx_t *gfx, const char* path);
+LIBAPI gfx_t *gfx_load_image(const char *path);
+LIBAPI int gfx_save_image(gfx_t *gfx, const char *path);
 
 /* Windows operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
@@ -213,17 +213,17 @@ int gfx_position(gfx_t *win, gfx_placement_t *place);
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 LIBAPI void *gfx_map(gfx_t *gfx);
 LIBAPI void gfx_unmap(gfx_t *gfx);
-int gfx_width(gfx_t* gfx);
-int gfx_height(gfx_t* gfx);
-LIBAPI int gfx_resize(gfx_t* gfx, int width, int height);
-LIBAPI int gfx_flip(gfx_t *gfx, gfx_clip_t* clip);
+int gfx_width(gfx_t *gfx);
+int gfx_height(gfx_t *gfx);
+LIBAPI int gfx_resize(gfx_t *gfx, int width, int height);
+LIBAPI int gfx_flip(gfx_t *gfx, gfx_clip_t *clip);
 
 /* Event operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 LIBAPI int gfx_poll(gfx_msg_t *msg);
 LIBAPI int gfx_push(gfx_t *gfx, int type, int param);
-LIBAPI void gfx_handle(gfx_msg_t* msg);
-LIBAPI unsigned gfx_timer(int delay, int interval);
+LIBAPI void gfx_handle(gfx_msg_t *msg);
+LIBAPI int gfx_timer(int delay, int interval);
 
 
 /* Drawing operations
@@ -242,7 +242,7 @@ LIBAPI uint32_t gfx_select_color(uint32_t color);
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 LIBAPI int gfx_glyph(gfx_t *gfx, gfx_font_t *font, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip);
 LIBAPI int gfx_write(gfx_t *gfx, gfx_font_t *font, const char *text, uint32_t fg, int x, int y, const gfx_clip_t *clip);
-LIBAPI gfx_font_t * gfx_font(const char *family, float size, int style);
+LIBAPI gfx_font_t *gfx_font(const char *family, float size, int style);
 LIBAPI void gfx_clear_font(gfx_font_t *font);
 LIBAPI int gfx_mesure_text(gfx_font_t *font, const char *text, gfx_text_metrics_t *metrics);
 

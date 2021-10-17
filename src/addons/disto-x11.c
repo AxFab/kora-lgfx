@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -63,16 +63,16 @@ struct xwin {
 
 int gfx_open_device(gfx_t *gfx, const char *path)
 {
-//     if (input_fd == 0)
-//         gfx_initialize();
-//     gfx->fd = open(path, O_WRONLY | O_DIRECT);
-//     if (gfx->fd == -1)
-//         return -1;
-//     // READ SIZE
-//     uint32_t size = fcntl(gfx->fd, FB_SIZE);
-//     gfx->width = size & 0x7FFF;
-//     gfx->height = (size >> 16) & 0x7FFF;
-//     return 0;
+    //     if (input_fd == 0)
+    //         gfx_initialize();
+    //     gfx->fd = open(path, O_WRONLY | O_DIRECT);
+    //     if (gfx->fd == -1)
+    //         return -1;
+    //     // READ SIZE
+    //     uint32_t size = fcntl(gfx->fd, FB_SIZE);
+    //     gfx->width = size & 0x7FFF;
+    //     gfx->height = (size >> 16) & 0x7FFF;
+    //     return 0;
     return -1;
 }
 
@@ -88,10 +88,10 @@ int gfx_open_window(gfx_t *gfx)
     }
     wi->screen = DefaultScreen(wi->display);
     wi->window = XCreateSimpleWindow(wi->display,
-        RootWindow(wi->display, wi->screen), 10, 10,
-        gfx->width, gfx->height, 1,
-        BlackPixel(wi->display, wi->screen),
-        WhitePixel(wi->display, wi->screen));
+                                     RootWindow(wi->display, wi->screen), 10, 10,
+                                     gfx->width, gfx->height, 1,
+                                     BlackPixel(wi->display, wi->screen),
+                                     WhitePixel(wi->display, wi->screen));
     XSelectInput(wi->display, wi->window, ExposureMask | KeyPressMask | KeyReleaseMask);
     XMapWindow(wi->display, wi->window);
     wi->gc = XDefaultGC(wi->display, wi->screen);
@@ -153,5 +153,3 @@ int gfx_push(gfx_t *gfx, int type, int param)
 {
     return 0;
 }
-
-

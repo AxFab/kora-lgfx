@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -23,23 +23,23 @@
 typedef struct font_bmp font_bmp_t;
 int gfx_glyph_bitfont(gfx_t *gfx, const font_bmp_t *face, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip);
 int gfx_mesure_bitfont(const font_bmp_t *face, const char *text, gfx_text_metrics_t *metrics);
-gfx_font_t * gfx_load_bitfont(float size, int style);
+gfx_font_t *gfx_load_bitfont(float size, int style);
 void gfx_clear_bitfont(gfx_font_t *font);
 
 #if defined __USE_FREETYPE
-typedef void * FT_Face;
+typedef void *FT_Face;
 void gfx_write_prepare_freetype(gfx_font_t *font);
 int gfx_glyph_freetype(gfx_t *gfx, FT_Face face, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip);
 int gfx_mesure_freetype(FT_Face face, const char *text, gfx_text_metrics_t *metrics);
-gfx_font_t * gfx_load_freetype(const char *family, float size, int style);
+gfx_font_t *gfx_load_freetype(const char *family, float size, int style);
 void gfx_clear_freetype(gfx_font_t *font);
 #endif
 
 
-LIBAPI int unichar(const char** txt)
+LIBAPI int unichar(const char **txt)
 {
-    const char* str = *txt;
-    int charcode = ((unsigned char*)str)[0];
+    const char *str = *txt;
+    int charcode = ((unsigned char *)str)[0];
     str++;
 
     if (charcode & 0x80) { // mbstring !
@@ -47,34 +47,28 @@ LIBAPI int unichar(const char** txt)
         if (charcode >= 0xFF) {
             charcode = 0; // 8
             lg = 0; // 7 x 6 => 42bits
-        }
-        else if (charcode >= 0xFE) {
+        } else if (charcode >= 0xFE) {
             charcode = 0; // 7
             lg = 0; // 6 x 6 => 36bits
-        }
-        else if (charcode >= 0xFC) {
+        } else if (charcode >= 0xFC) {
             charcode &= 0x1; // 6
             lg = 5; // 5 x 6 + 1 => 31bits
-        }
-        else if (charcode >= 0xF8) {
+        } else if (charcode >= 0xF8) {
             charcode &= 0x3; // 5
             lg = 4; // 4 x 6 + 2 => 26bits
-        }
-        else if (charcode >= 0xF0) {
+        } else if (charcode >= 0xF0) {
             charcode &= 0x07; // 4
             lg = 3; // 3 x 6 + 3 => 21bits
-        }
-        else if (charcode >= 0xE0) {
+        } else if (charcode >= 0xE0) {
             charcode &= 0x0F; // 3
             lg = 2; // 2 x 6 + 4 => 16bits
-        }
-        else if (charcode >= 0xC0) {
+        } else if (charcode >= 0xC0) {
             charcode &= 0x1F; // 2
             lg = 1; // 6 + 5 => 11bits
         }
 
         while (lg-- > 0) {
-            charcode = charcode << 6 | ((unsigned char*)str)[0] & 0x3f;
+            charcode = charcode << 6 | ((unsigned char *)str)[0] & 0x3f;
             str++;
         }
     }
@@ -83,7 +77,8 @@ LIBAPI int unichar(const char** txt)
     return charcode;
 }
 
-LIBAPI int utf8char(int uni, char* buf) {
+LIBAPI int utf8char(int uni, char *buf)
+{
     if (uni < 0)
         return -1;
     if (uni < 0x80) {
@@ -152,9 +147,9 @@ LIBAPI int gfx_write(gfx_t *gfx, gfx_font_t *font, const char *text, uint32_t fg
     return 0;
 }
 
-LIBAPI gfx_font_t * gfx_font(const char *family, float size, int style)
+LIBAPI gfx_font_t *gfx_font(const char *family, float size, int style)
 {
-    gfx_font_t* font = NULL;
+    gfx_font_t *font = NULL;
     if (family == NULL || family[0] == '\0')
         font = gfx_load_bitfont(size, style);
 #if defined __USE_FREETYPE
@@ -185,4 +180,3 @@ LIBAPI int gfx_mesure_text(gfx_font_t *font, const char *text, gfx_text_metrics_
 #endif
     return -1;
 }
-

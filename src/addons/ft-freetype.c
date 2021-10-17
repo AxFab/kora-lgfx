@@ -1,6 +1,6 @@
 /*
  *      This file is part of the KoraOS project.
- *  Copyright (C) 2015-2019  <Fabien Bavent>
+ *  Copyright (C) 2015-2021  <Fabien Bavent>
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as
@@ -33,16 +33,16 @@
 FT_Library library;
 bool __freetype_initialized = false;
 // static const char* system_dir = "C:/Windows/Fonts";
-static const char* system_dir = "C:/Users/Aesga/develop/kora/src/desktop/resx/fonts";
+static const char *system_dir = "C:/Users/Aesga/develop/kora/src/desktop/resx/fonts";
 
-void gfx_write_prepare_freetype(gfx_font_t* font)
+void gfx_write_prepare_freetype(gfx_font_t *font)
 {
     int dpi = 96;
     float sizeInPx = (font->size * dpi) / 96;
     FT_Error fterror = FT_Set_Char_Size((FT_Face)font->face, 0, sizeInPx * 64.0f/* 1/64th pts*/, dpi, dpi);
 }
 
-int gfx_glyph_freetype(gfx_t* gfx, FT_Face face, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t* clip)
+int gfx_glyph_freetype(gfx_t *gfx, FT_Face face, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip)
 {
     FT_GlyphSlot slot = face->glyph;
     FT_UInt glyph_index = FT_Get_Char_Index(face, unicode);
@@ -69,9 +69,9 @@ int gfx_glyph_freetype(gfx_t* gfx, FT_Face face, uint32_t unicode, uint32_t fg, 
     return slot->advance.x >> 6;
 }
 
-int unichar(char**);
+int unichar(char **);
 
-int gfx_mesure_freetype(FT_Face face, const char* text, gfx_text_metrics_t* metrics)
+int gfx_mesure_freetype(FT_Face face, const char *text, gfx_text_metrics_t *metrics)
 {
     int width = 0, height = 0, yBearing = 0;
 
@@ -99,8 +99,8 @@ void _gfx_list_fonts_win32()
     FT_Error fterror;
     char buf[BUFSIZ];
     struct dirent de;
-    void* p;
-    DIR* dir = opendir(system_dir);
+    void *p;
+    DIR *dir = opendir(system_dir);
     for (;;) {
         readdir_r(dir, &de, &p);
         if (p == NULL)
@@ -129,8 +129,8 @@ int _gfx_search_fonts_win32(const char *family, const char *style, char *buf)
 {
     FT_Error fterror;
     struct dirent de;
-    struct dirent* p;
-    DIR* dir = opendir(system_dir);
+    struct dirent *p;
+    DIR *dir = opendir(system_dir);
     for (;;) {
         readdir_r(dir, &de, &p);
         if (p == NULL)
@@ -166,7 +166,7 @@ int _gfx_search_fonts_win32(const char *family, const char *style, char *buf)
     return -1;
 }
 
-const char* style_name[] = {
+const char *style_name[] = {
     "Regular",
     "Bold", // 1
     "Italic", // 2
@@ -177,7 +177,7 @@ const char* style_name[] = {
     "Solid", // 7
 };
 
-gfx_font_t* gfx_load_freetype(const char* family, float size, int style)
+gfx_font_t *gfx_load_freetype(const char *family, float size, int style)
 {
 
     FT_Error fterror;
@@ -203,18 +203,16 @@ gfx_font_t* gfx_load_freetype(const char* family, float size, int style)
             return NULL;
     }
 
-    gfx_font_t* font = malloc(sizeof(gfx_font_t));
+    gfx_font_t *font = malloc(sizeof(gfx_font_t));
     font->mode = GFX_FT_FREETYPE;
     font->size = size;
     font->style = 0;
     font->family = NULL; // strdup(family);
-    font->face = (void*)face;
+    font->face = (void *)face;
     return font;
 }
 
-void gfx_clear_freetype(gfx_font_t* font)
+void gfx_clear_freetype(gfx_font_t *font)
 {
     FT_Done_Face((FT_Face)font->face);
 }
-
-
