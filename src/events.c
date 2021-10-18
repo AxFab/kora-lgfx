@@ -20,6 +20,7 @@
 #include "gfx.h"
 #include "disto.h"
 #include "keycodes.h"
+#include <string.h>
 
 int gfx_keyboard_down(int key, gfx_seat_t *seat, int *key2);
 int gfx_keyboard_up(int key, gfx_seat_t *seat);
@@ -75,11 +76,9 @@ int msg_ptr = 0;
 
 int gfx_poll(gfx_msg_t *msg)
 {
-    char tmp[120];
     if (msg_ptr > 0) {
         msg_ptr--;
         memcpy(msg, &msg_pool[msg_ptr], sizeof(*msg));
-        // snprintf(tmp, 120, "Event recv <%d:%x.%x>", msg->message, msg->param1, msg->param2);
         return 0;
     }
 

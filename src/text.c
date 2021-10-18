@@ -28,8 +28,8 @@ void gfx_clear_bitfont(gfx_font_t *font);
 
 #if defined __USE_FREETYPE
 typedef void *FT_Face;
-void gfx_write_prepare_freetype(gfx_font_t *font);
-int gfx_glyph_freetype(gfx_t *gfx, FT_Face face, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip);
+void gfx_write_prepare_freetype(const gfx_font_t *font);
+int gfx_glyph_freetype(gfx_t *gfx, const FT_Face face, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip);
 int gfx_mesure_freetype(FT_Face face, const char *text, gfx_text_metrics_t *metrics);
 gfx_font_t *gfx_load_freetype(const char *family, float size, int style);
 void gfx_clear_freetype(gfx_font_t *font);
@@ -111,7 +111,7 @@ LIBAPI int utf8char(int uni, char *buf)
 }
 
 
-LIBAPI int gfx_glyph(gfx_t *gfx, gfx_font_t *font, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip)
+LIBAPI int gfx_glyph(gfx_t *gfx, const gfx_font_t *font, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip)
 {
     if (font->mode == GFX_FT_BITFONT)
         return gfx_glyph_bitfont(gfx, font->face, unicode, fg, bg, x, y, clip);
@@ -131,7 +131,7 @@ LIBAPI int gfx_write(gfx_t *gfx, gfx_font_t *font, const char *text, uint32_t fg
         gfx_write_prepare_freetype(font);
 #endif
 
-    wchar_t unicode, len, w;
+    int w;
     while (*text) {
         int unicode = unichar(&text);
         if (unicode < 0)
@@ -142,6 +142,8 @@ LIBAPI int gfx_write(gfx_t *gfx, gfx_font_t *font, const char *text, uint32_t fg
         else if (font->mode == GFX_FT_FREETYPE)
             w = gfx_glyph_freetype(gfx, font->face, unicode, fg, 0, x, y, clip);
 #endif
+        else
+            w = 0;
         x += w;
     }
     return 0;

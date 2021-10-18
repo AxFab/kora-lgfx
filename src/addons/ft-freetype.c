@@ -35,14 +35,14 @@ bool __freetype_initialized = false;
 // static const char* system_dir = "C:/Windows/Fonts";
 static const char *system_dir = "C:/Users/Aesga/develop/kora/src/desktop/resx/fonts";
 
-void gfx_write_prepare_freetype(gfx_font_t *font)
+void gfx_write_prepare_freetype(const gfx_font_t *font)
 {
     int dpi = 96;
     float sizeInPx = (font->size * dpi) / 96;
     FT_Error fterror = FT_Set_Char_Size((FT_Face)font->face, 0, sizeInPx * 64.0f/* 1/64th pts*/, dpi, dpi);
 }
 
-int gfx_glyph_freetype(gfx_t *gfx, FT_Face face, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip)
+int gfx_glyph_freetype(gfx_t *gfx, const FT_Face face, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip)
 {
     FT_GlyphSlot slot = face->glyph;
     FT_UInt glyph_index = FT_Get_Char_Index(face, unicode);
@@ -51,9 +51,9 @@ int gfx_glyph_freetype(gfx_t *gfx, FT_Face face, uint32_t unicode, uint32_t fg, 
 
     // Draw
     fg = fg & 0xffffff;
-    for (int i = 0; i < slot->bitmap.rows; ++i) {
+    for (unsigned i = 0; i < slot->bitmap.rows; ++i) {
         int py = y - slot->bitmap_top + i;
-        for (int j = 0; j < slot->bitmap.width; ++j) {
+        for (unsigned j = 0; j < slot->bitmap.width; ++j) {
             if (py < 0 || py >= gfx->height)
                 continue;
             int px = x + slot->bitmap_left + j;

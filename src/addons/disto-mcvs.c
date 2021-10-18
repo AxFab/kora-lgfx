@@ -256,7 +256,7 @@ int gfx_open_win32(gfx_t *gfx)
     handle->next = __handle;
     __handle = handle;
 
-    SetWindowPos(gfx->fd, HWND_TOPMOST, 50, 50, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
+    SetWindowPos((HWND)gfx->fd, HWND_TOPMOST, 50, 50, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_SHOWWINDOW);
     // UINT timer;
     // SetTimer((HWND)gfx->fd, (UINT_PTR)&timer, 25, NULL);
     // gfx->flags = GFX_FL_PAINTTICK | GFX_FL_INVALID;
