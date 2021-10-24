@@ -24,7 +24,11 @@
 #include "mcrs.h"
 #include "disto.h"
 
-gfx_ctx_t *__gfx_ctx = &gfx_ctx_wns;
+#ifdef _WIN32
+gfx_ctx_t* __gfx_ctx = &gfx_ctx_win32;
+#else
+gfx_ctx_t* __gfx_ctx = &gfx_ctx_wns;
+#endif
 
 LIBAPI gfx_ctx_t *gfx_context(const char *name)
 {

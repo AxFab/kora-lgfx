@@ -455,15 +455,40 @@ const font_bmp_t *fonts[] = {
 };
 
 
-int gfx_glyph_bitfont(gfx_t *gfx, const font_bmp_t *face, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip)
+int gfx_glyph_bitfont(gfx_t* gfx, const font_bmp_t* face, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t* clip)
 {
     int l, px, ph;
-    int py = y;
+    int py = y - face->height;
     int gx = MIN(gfx->width, x + face->width);
     int sx = MIN(gfx->width, x + face->dispx);
-    int gy = MIN(gfx->height, y + face->height);
-    int sy = MIN(gfx->height, y + face->dispy);
-    const uint8_t *glyph = &face->glyphs[(unicode - 0x20) * face->glyph_size];
+    int gy = MIN(gfx->height, py + face->height);
+    int sy = MIN(gfx->height, py + face->dispy);
+    const uint8_t* glyph = &face->glyphs[(unicode - 0x20) * face->glyph_size];
+
+    l = 0;
+    if (py < 0)
+        l = face->width * -py, py = 0;
+
+    for (; py < gy; ++py) {
+        ph = py * gfx->width;
+        for (px = x; px < gx; ++px, ++l) 
+            if (glyph[l / 8] & (1 << l % 8))
+                gfx->pixels4[ph + px] = fg;
+        // TODO -- l is late if gx < x + face->width
+    }
+
+    return face->dispx;
+}
+
+int gfx_glyph_bitfont2(gfx_t* gfx, const font_bmp_t* face, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t* clip)
+{
+    int l, px, ph;
+    int py = y - face->height;
+    int gx = MIN(gfx->width, x + face->width);
+    int sx = MIN(gfx->width, x + face->dispx);
+    int gy = MIN(gfx->height, py + face->height);
+    int sy = MIN(gfx->height, py + face->dispy);
+    const uint8_t* glyph = &face->glyphs[(unicode - 0x20) * face->glyph_size];
     for (l = 0; py < gy; ++py) {
         ph = py * gfx->width;
         for (px = x; px < gx; ++px, ++l)
@@ -485,7 +510,7 @@ int gfx_mesure_bitfont(const font_bmp_t *face, const char *text, gfx_text_metric
 {
     metrics->width = face->dispx;
     metrics->height = face->dispy;
-    metrics->baseline = face->dispy;
+    metrics->baseline = face->height;
     return 0;
 }
 

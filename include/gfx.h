@@ -221,7 +221,7 @@ LIBAPI int gfx_flip(gfx_t *gfx, gfx_clip_t *clip);
 /* Event operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
 LIBAPI int gfx_poll(gfx_msg_t *msg);
-LIBAPI int gfx_push(gfx_t *gfx, int type, int param);
+LIBAPI int gfx_push(gfx_t *gfx, int type, int param, int param2);
 LIBAPI void gfx_handle(gfx_msg_t *msg);
 LIBAPI int gfx_timer(int delay, int interval);
 
@@ -240,11 +240,11 @@ LIBAPI uint32_t gfx_select_color(uint32_t color);
 
 /* Font operations
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
-LIBAPI int gfx_glyph(gfx_t *gfx, gfx_font_t *font, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip);
-LIBAPI int gfx_write(gfx_t *gfx, gfx_font_t *font, const char *text, uint32_t fg, int x, int y, const gfx_clip_t *clip);
+LIBAPI int gfx_glyph(gfx_t *gfx, const gfx_font_t *font, uint32_t unicode, uint32_t fg, uint32_t bg, int x, int y, const gfx_clip_t *clip);
+LIBAPI int gfx_write(gfx_t *gfx, const gfx_font_t *font, const char *text, uint32_t fg, int x, int y, const gfx_clip_t *clip);
 LIBAPI gfx_font_t *gfx_font(const char *family, float size, int style);
 LIBAPI void gfx_clear_font(gfx_font_t *font);
-LIBAPI int gfx_mesure_text(gfx_font_t *font, const char *text, gfx_text_metrics_t *metrics);
+LIBAPI int gfx_mesure_text(const gfx_font_t *font, const char *text, gfx_text_metrics_t *metrics);
 
 
 /* Helpers

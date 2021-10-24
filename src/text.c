@@ -68,7 +68,7 @@ LIBAPI int unichar(const char **txt)
         }
 
         while (lg-- > 0) {
-            charcode = charcode << 6 | ((unsigned char *)str)[0] & 0x3f;
+            charcode = (charcode << 6) | (((unsigned char *)str)[0] & 0x3f);
             str++;
         }
     }
@@ -124,7 +124,7 @@ LIBAPI int gfx_glyph(gfx_t *gfx, const gfx_font_t *font, uint32_t unicode, uint3
     return -1;
 }
 
-LIBAPI int gfx_write(gfx_t *gfx, gfx_font_t *font, const char *text, uint32_t fg, int x, int y, const gfx_clip_t *clip)
+LIBAPI int gfx_write(gfx_t *gfx, const gfx_font_t *font, const char *text, uint32_t fg, int x, int y, const gfx_clip_t *clip)
 {
 #if defined __USE_FREETYPE
     if (font->mode == GFX_FT_FREETYPE)
@@ -155,7 +155,8 @@ LIBAPI gfx_font_t *gfx_font(const char *family, float size, int style)
     if (family == NULL || family[0] == '\0')
         font = gfx_load_bitfont(size, style);
 #if defined __USE_FREETYPE
-    font = gfx_load_freetype(family, size, style);
+    else
+        font = gfx_load_freetype(family, size, style);
 #endif
     return font;
 }
@@ -170,7 +171,7 @@ LIBAPI void gfx_clear_font(gfx_font_t *font)
 #endif
 }
 
-LIBAPI int gfx_mesure_text(gfx_font_t *font, const char *text, gfx_text_metrics_t *metrics)
+LIBAPI int gfx_mesure_text(const gfx_font_t *font, const char *text, gfx_text_metrics_t *metrics)
 {
     if (font->mode == GFX_FT_BITFONT)
         return gfx_mesure_bitfont(font->face, text, metrics);

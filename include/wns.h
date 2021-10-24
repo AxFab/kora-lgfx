@@ -130,7 +130,7 @@ static inline int wns_send(wns_cnx_t *cnx, wns_msg_t *msg)
 
 static inline int wns_recv(wns_cnx_t *cnx, wns_msg_t *msg)
 {
-    int rlen = sizeof(struct sockaddr);
+    unsigned rlen = sizeof(struct sockaddr);
     struct sockaddr raddr;
     int ret = recvfrom(cnx->sock, (char *)msg, sizeof(wns_msg_t), 0, &raddr, &rlen);
     if (ret == SOCKET_ERROR)

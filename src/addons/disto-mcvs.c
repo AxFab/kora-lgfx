@@ -129,7 +129,7 @@ LRESULT CALLBACK WndProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In
         DestroyWindow(hwnd);
         break;
     case WM_DESTROY:
-        gfx_push(gfx, GFX_EV_QUIT, 0);
+        gfx_push(gfx, GFX_EV_QUIT, 0, 0);
         break;
     case WM_ERASEBKGND:
         return 1;
@@ -142,7 +142,7 @@ LRESULT CALLBACK WndProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In
                 gfx->width = rect.right;
                 gfx->height = rect.bottom;
             }
-            gfx_push(gfx, GFX_EV_RESIZE, GFX_POINT(gfx->width, gfx->height));
+            gfx_push(gfx, GFX_EV_RESIZE, GFX_POINT(gfx->width, gfx->height), 0);
         }
         break;
     default:
@@ -179,7 +179,7 @@ void _gfx_paint(HWND hwnd, gfx_t *gfx)
     PAINTSTRUCT ps;
     // Find the GFX who match
     HDC hdc = BeginPaint(hwnd, &ps);
-    void *pixels = gfx_map(gfx);
+    void* pixels = gfx_map(gfx);
     HBITMAP backbuffer = CreateBitmap(gfx->width, gfx->height, 1, 32, pixels);
     HDC backbuffDC = CreateCompatibleDC(hdc);
     SelectObject(backbuffDC, backbuffer);
@@ -264,6 +264,7 @@ int gfx_open_win32(gfx_t *gfx)
     gfx->unmap = gfx_unmap_win32;
     gfx->flip = gfx_flip_win32;
     gfx->close = gfx_close_win32;
+
     return 0;
 }
 

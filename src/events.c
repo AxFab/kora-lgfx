@@ -25,9 +25,11 @@
 int gfx_keyboard_down(int key, gfx_seat_t *seat, int *key2);
 int gfx_keyboard_up(int key, gfx_seat_t *seat);
 
+
+
 LIBAPI void gfx_handle(gfx_msg_t *msg)
 {
-    int key, key2, x, y;
+    int key, key2, stt, x, y;
     gfx_t *gfx = msg->gfx;
     gfx_seat_t *seat = gfx ? gfx->seat : NULL;
     if (seat)
@@ -51,10 +53,17 @@ LIBAPI void gfx_handle(gfx_msg_t *msg)
         break;
     case GFX_EV_KEYDOWN:
         key = gfx_keyboard_down(msg->param1, seat, &key2);
-        if (key2 != 0)
-            gfx_push(gfx, GFX_EV_KEYPRESS, key2);
+        stt = 0;
+        if (seat->kdb_status & (KMOD_LCTRL | KMOD_RCTRL))
+            stt |= 1;
+        else if (seat->kdb_status & (KMOD_LALT))
+            stt |= 2;
+        else if (seat->kdb_status & (KMOD_LGUI | KMOD_RGUI))
+            stt |= 4;
+        if (key2 != 0 && stt == 0)
+            gfx_push(gfx, GFX_EV_KEYPRESS, key2, stt);
         if (key != 0 && key < KEY_UNICODE_MAX)
-            gfx_push(gfx, GFX_EV_KEYPRESS, key);
+            gfx_push(gfx, GFX_EV_KEYPRESS, key, stt);
         break;
     case GFX_EV_KEYUP:
         key = gfx_keyboard_up(msg->param1, seat);
@@ -87,13 +96,14 @@ int gfx_poll(gfx_msg_t *msg)
 }
 
 
-int gfx_push(gfx_t *gfx, int type, int param)
+int gfx_push(gfx_t *gfx, int type, int param1, int param2)
 {
     if (msg_ptr >= MSG_POOL_SIZE)
         return -1;
     gfx_msg_t *msg = &msg_pool[msg_ptr++];
     msg->message = type;
-    msg->param1 = param;
+    msg->param1 = param1;
+    msg->param2 = param2;
     msg->gfx = gfx;
     return 0;
 }
