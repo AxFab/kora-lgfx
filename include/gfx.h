@@ -260,6 +260,8 @@ LIBAPI int gfx_clipboard_paste(char *buf, int len);
 
 // Context
 
-
+#define gfx_clip_set(rc,x,y,w,h) do { (rc)->left=(x); (rc)->top=(y); (rc)->right=(x)+(w); (rc)->bottom=(y)+(h); } while(0)
+#define gfx_clip_srink(rc,s) do { (rc)->left+=(s); (rc)->top+=(s); (rc)->right-=(s); (rc)->bottom-=(s); } while(0)
+#define gfx_clip_dilate(rc,s) do { (rc)->left-=(s); (rc)->top-=(s); (rc)->right+=(s); (rc)->bottom+=(s); } while(0)
 
 #endif  /* _GFX_H */

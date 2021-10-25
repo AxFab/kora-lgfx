@@ -32,8 +32,16 @@
 
 FT_Library library;
 bool __freetype_initialized = false;
-// static const char* system_dir = "C:/Windows/Fonts";
-static const char *system_dir = "C:/Users/Aesga/develop/kora/src/desktop/resx/fonts";
+
+#ifndef __RESX_PROJ_DIR
+#ifdef _WIN32
+static const char* system_dir = "C:/Windows/Fonts";
+#else
+static const char* system_dir = "/usr/share/fonts";
+#endif
+#else
+static const char* system_dir = "../../src/desktop/resx/fonts";
+#endif
 
 void gfx_write_prepare_freetype(const gfx_font_t *font)
 {
