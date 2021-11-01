@@ -268,6 +268,17 @@ int gfx_open_win32(gfx_t *gfx)
     return 0;
 }
 
+int gfx_open_device(gfx_t* gfx, const char* path)
+{
+    return -1;
+}
+
+LIBAPI int gfx_open_input(const char* path, int uid)
+{
+    return -1;
+}
+
+
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
 int gfx_poll_win32(gfx_msg_t *msg)

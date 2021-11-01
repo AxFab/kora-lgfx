@@ -67,31 +67,35 @@ struct gfxhandle {
 };
 
 gfxhandle_t *__handle = NULL;
-gfx_t *__build_win = NULL;
 
 uint32_t __auto_handle = 0;
 int input_fd = 0;
+int input_uid = 0;
 
 const char *pipe_name = "";
 
 gfx_t *__gfx_from_handle(uint32_t uid)
 {
     if (__handle == NULL)
-        return __build_win;
+        return NULL;
     gfxhandle_t *handle = __handle;
     while (handle->uid != uid) {
         handle = handle->next;
         if (handle == NULL)
-            return __build_win;
+            return NULL;
     }
     return handle->gfx;
 }
 
-void gfx_initialize()
+void __gfx_add_handle(gfx_t *gfx)
 {
-    if (input_fd == 0)
-        input_fd = open("/dev/kbd", O_RDONLY | O_DIRECT);
+    gfxhandle_t *handle = calloc(sizeof(gfxhandle_t), 1);
+    handle->gfx = gfx;
+    handle->uid = gfx->uid;
+    handle->next = __handle;
+    __handle = handle;
 }
+
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
@@ -131,18 +135,12 @@ int gfx_flip_kora(gfx_t *gfx, gfx_clip_t *clip)
 
 int gfx_open_kora(gfx_t *gfx)
 {
-    if (input_fd == 0)
-        gfx_initialize();
     gfx->fd = window(0, gfx->width, gfx->height, 0);
     gfx->uid = ++__auto_handle;
     if (gfx->fd == -1)
         return -1;
 
-    gfxhandle_t *handle = calloc(sizeof(gfxhandle_t), 1);
-    handle->gfx = gfx;
-    handle->uid = gfx->uid;
-    handle->next = __handle;
-    __handle = handle;
+    __gfx_add_handle(gfx);
     gfx->map = gfx_map_kora;
     gfx->unmap = gfx_unmap_kora;
     gfx->flip = gfx_flip_kora;
@@ -152,8 +150,6 @@ int gfx_open_kora(gfx_t *gfx)
 
 int gfx_open_device(gfx_t *gfx, const char *path)
 {
-    if (input_fd == 0)
-        gfx_initialize();
     gfx->fd = open(path, O_WRONLY | O_DIRECT);
     if (gfx->fd == -1)
         return -1;
@@ -161,6 +157,7 @@ int gfx_open_device(gfx_t *gfx, const char *path)
     uint32_t size = fcntl(gfx->fd, FB_SIZE);
     gfx->width = size & 0x7FFF;
     gfx->height = (size >> 16) & 0x7FFF;
+    __gfx_add_handle(gfx);
     gfx->map = gfx_map_kora;
     gfx->unmap = gfx_unmap_kora;
     gfx->flip = gfx_flip_kora;
@@ -169,22 +166,35 @@ int gfx_open_device(gfx_t *gfx, const char *path)
     return 0;
 }
 
+
+LIBAPI int gfx_open_input(const char* path, int uid)
+{
+    gfx_context("kora");
+    if (input_fd == 0) {
+        input_fd = open(path, O_RDONLY | O_DIRECT);
+        input_uid = uid;
+    }
+    return 0;
+}
+
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
 int gfx_poll_kora(gfx_msg_t *msg)
 {
     char tmp[32];
+    if (input_fd == 0)
+        return -1;
     for (;;) {
         gfx_eventmsg_t emsg;
         if (read(input_fd, (char *)&emsg, sizeof(emsg)) != 0) {
-            if (msg->message != GFX_EV_TIMER) {
-                snprintf(tmp, 120, "Event recv <%d:%x.%x>", msg->message, msg->param1, msg->param2);
-                write(1, tmp, strlen(tmp));
-            }
+            // if (emsg.message != GFX_EV_TIMER) {
+            //     snprintf(tmp, 120, "Event recv <%d:%x.%x>", emsg.message, emsg.param1, emsg.param2);
+            //     write(1, tmp, strlen(tmp));
+            // }
             msg->message = emsg.message;
             msg->param1 = emsg.param1;
             msg->param2 = emsg.param2;
-            msg->gfx = __gfx_from_handle(emsg.window);
+            msg->gfx = __gfx_from_handle(emsg.window ? emsg.window : input_uid);
             return 0;
         }
     }

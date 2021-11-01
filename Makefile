@@ -34,7 +34,7 @@ CFLAGS ?= -Wall -Wextra -Wno-unused-parameter -ggdb
 
 disto ?= kora
 use_png ?= $(shell $(PKC) --exists libpng && echo 'y')
-
+use_ft ?= y
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 SRCS_l += $(wildcard $(srcdir)/*.c)

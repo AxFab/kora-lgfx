@@ -24,8 +24,10 @@
 #include "mcrs.h"
 #include "disto.h"
 
-#ifdef _WIN32
+#if defined _WIN32
 gfx_ctx_t* __gfx_ctx = &gfx_ctx_win32;
+#elif defined __kora__
+gfx_ctx_t* __gfx_ctx = &gfx_ctx_kora;
 #else
 gfx_ctx_t* __gfx_ctx = &gfx_ctx_wns;
 #endif
@@ -37,6 +39,9 @@ LIBAPI gfx_ctx_t *gfx_context(const char *name)
 #ifdef _WIN32
     if (stricmp(name, "win32") == 0)
         __gfx_ctx = &gfx_ctx_win32;
+#elif defined __kora__
+    if (stricmp(name, "kora") == 0)
+        __gfx_ctx = &gfx_ctx_kora;
 #endif
     if (stricmp(name, "wns") == 0)
         __gfx_ctx = &gfx_ctx_wns;
@@ -70,19 +75,18 @@ LIBAPI gfx_t *gfx_create_surface(int width, int height)
     return gfx;
 }
 
-//LIBAPI gfx_t* gfx_open_surface(const char* path)
-//{
-//    gfx_t* gfx = calloc(sizeof(gfx_t), 1);
-//    if (gfx_open_device(gfx, path) == -1) {
-//        free(gfx);
-//        return NULL;
-//    }
-//
-//    gfx->seat = calloc(sizeof(gfx_seat_t), 1);
-//    gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
-//    return gfx;
-//}
+LIBAPI gfx_t* gfx_open_surface(const char *path)
+{
+   gfx_t* gfx = calloc(sizeof(gfx_t), 1);
+   if (gfx_open_device(gfx, path) == -1) {
+       free(gfx);
+       return NULL;
+   }
 
+   gfx->seat = calloc(sizeof(gfx_seat_t), 1);
+   gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
+   return gfx;
+}
 
 LIBAPI void gfx_destroy(gfx_t *gfx)
 {
