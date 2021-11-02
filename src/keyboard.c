@@ -102,19 +102,19 @@ int kdb_layout_US_international[128][4] = {
     { _K4(KEY_F10) }, // 44
     { _K4(KEY_NUM) }, // 45
     K4(0), // 46 -- FN+PgDn on my keyboard!
-    { '7', KEY_HOME, _K2(0) }, // 47
-    { '8', KEY_UP, _K2(0) }, // 48
-    { '9', KEY_PAGEUP, _K2(0) }, // 49
+    { KEY_HOME, '7', _K2(0) }, // 47
+    { KEY_UP, '8', _K2(0) }, // 48
+    { KEY_PAGEUP, '9', _K2(0) }, // 49
     { _K2('-'), _K2(0) }, // 4A -- Num pad
-    { '4', KEY_LEFT, _K2(0) }, // 4B
-    { '7', 0, _K2(0) }, // 4C
-    { '6', KEY_RIGHT, _K2(0) }, // 4D
+    { KEY_LEFT, '4', _K2(0) }, // 4B
+    { 0, '5', _K2(0) }, // 4C
+    { KEY_RIGHT, '6', _K2(0) }, // 4D
     { _K2('+'), _K2(0) }, // 4E -- Num pad
-    { '1', KEY_END, _K2(0) }, // 4F
-    { '2', KEY_DOWN, _K2(0) }, // 50
-    { '3', KEY_PAGEDOWN, _K2(0) }, // 51
-    { '0', KEY_INSERT, _K2(0) }, // 52
-    { '.', KEY_DELETE, _K2(0) }, // 53
+    { KEY_END, '1', _K2(0) }, // 4F
+    { KEY_DOWN, '2', _K2(0) }, // 50
+    { KEY_PAGEDOWN, '3', _K2(0) }, // 51
+    { KEY_INSERT, '0', _K2(0) }, // 52
+    { KEY_DELETE, '.', _K2(0) }, // 53
     K4(0), // 54
     K4(0), // 55
     { '\\', '|', _K2(0) }, // 56

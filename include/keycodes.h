@@ -22,6 +22,7 @@
 
 #define _FROM_SCANCODE(x)  (x|(1<<30))
 #define KEY_UNICODE_MAX  (1<<30)
+#define KEY_UNICODE_SPECIAL (1<<29)
 
 typedef enum {
     KEY_UNKNOWN = 0,
@@ -136,18 +137,7 @@ typedef enum {
     KEY_Y,
     KEY_Z,
 
-    KEY_LSHIFT = _FROM_SCANCODE(1),
-    KEY_RSHIFT,
-    KEY_LCTRL,
-    KEY_RCTRL,
-    KEY_LALT,
-    KEY_RALT,
-    KEY_LGUI,
-    KEY_RGUI,
-    KEY_NUM,
-    KEY_CAPS,
-
-    KEY_PRINTSCREEN,
+    KEY_PRINTSCREEN = KEY_UNICODE_SPECIAL,
     KEY_SCROLLLOCK,
     KEY_PAUSE,
     KEY_INSERT,
@@ -175,6 +165,18 @@ typedef enum {
     KEY_F12,
 
     KEY_BREAK,
+
+    KEY_LSHIFT = _FROM_SCANCODE(1),
+    KEY_RSHIFT,
+    KEY_LCTRL,
+    KEY_RCTRL,
+    KEY_LALT,
+    KEY_RALT,
+    KEY_LGUI,
+    KEY_RGUI,
+    KEY_NUM,
+    KEY_CAPS,
+
 
 } keycode_t;
 
