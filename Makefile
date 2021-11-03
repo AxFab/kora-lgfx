@@ -48,6 +48,7 @@ CFLAGS_l += -fPIC
 ifneq ($(sysdir),)
 CFLAGS_l += -I$(sysdir)/include
 LFLAGS_l += -L$(sysdir)/lib
+LFLAGS_l += -Wl,-rpath-link,$(sysdir)/lib
 endif
 
 LFLAGS_l += -lm
