@@ -101,13 +101,21 @@ enum gfx_font_style {
     GFX_FONT_WEIGHT_MASK = 0xF,
 };
 
+
 enum {
     GFXFT_REGULAR = 0,
-    GFXFT_BOLD = 1,
-    GFXFT_ITALIC = 2,
-    GFXFT_BLACK = 4,
-    GFXFT_SOLID = 7,
-    GFXFT_END = 8,
+    GFXFT_ITALIC = 1,
+
+    GFXFT_HAIRLINE = 2,
+    GFXFT_THIN = 4,
+    GFXFT_LIGHT = 6,
+    GFXFT_MEDIUM = 8,
+    GFXFT_SEMIBOLD = 10,
+    GFXFT_BOLD = 12,
+    GFXFT_BLACK = 14,
+    GFXFT_HEAVY = 16,
+    GFXFT_SOLID = 18,
+    GFXFT_END = 19,
 };
 
 struct gfx {
@@ -162,6 +170,7 @@ struct gfx_font {
     float size;
     int style;
     char *family;
+    char *stylename;
     void *face;
 };
 
@@ -263,5 +272,6 @@ LIBAPI int gfx_clipboard_paste(char *buf, int len);
 #define gfx_clip_set(rc,x,y,w,h) do { (rc)->left=(x); (rc)->top=(y); (rc)->right=(x)+(w); (rc)->bottom=(y)+(h); } while(0)
 #define gfx_clip_srink(rc,s) do { (rc)->left+=(s); (rc)->top+=(s); (rc)->right-=(s); (rc)->bottom-=(s); } while(0)
 #define gfx_clip_dilate(rc,s) do { (rc)->left-=(s); (rc)->top-=(s); (rc)->right+=(s); (rc)->bottom+=(s); } while(0)
+#define gfx_clip_move(rc,x,y) do { (rc)->left+=(x); (rc)->top+=(y); (rc)->right+=(x); (rc)->bottom+=(y); } while(0)
 
 #endif  /* _GFX_H */

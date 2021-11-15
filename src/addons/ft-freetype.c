@@ -102,9 +102,14 @@ int gfx_mesure_freetype(FT_Face face, const char *text, gfx_text_metrics_t *metr
     return 0;
 }
 
-void _gfx_list_fonts_win32()
+LIBAPI void _gfx_list_fonts_win32()
 {
     FT_Error fterror;
+    if (!__freetype_initialized) {
+        fterror = FT_Init_FreeType(&library);
+        __freetype_initialized = true;
+    }
+
     char buf[BUFSIZ];
     struct dirent de;
     void *p;
@@ -176,13 +181,24 @@ int _gfx_search_fonts_win32(const char *family, const char *style, char *buf)
 
 const char *style_name[] = {
     "Regular",
-    "Bold", // 1
-    "Italic", // 2
-    "Bold Italic", // 3
-    "Black", // 4
-    "Black", // 5
-    "Black Italic", // 6
-    "Solid", // 7
+    "Italic",
+    "Hairline",
+    "Hairline Italic",
+    "Thin",
+    "Thin Italic",
+    "Light",
+    "Light Italic",
+    "Medium",
+    "Medium Italic",
+    "Semibold",
+    "Semibold Italic",
+    "Bold",
+    "Bold Italic",
+    "Black",
+    "Black Italic",
+    "Heavy",
+    "Heavy Italic",
+    "Solid",
 };
 
 gfx_font_t *gfx_load_freetype(const char *family, float size, int style)
@@ -215,7 +231,8 @@ gfx_font_t *gfx_load_freetype(const char *family, float size, int style)
     font->mode = GFX_FT_FREETYPE;
     font->size = size;
     font->style = 0;
-    font->family = NULL; // strdup(family);
+    font->family = strdup(face->family_name);
+    font->stylename = strdup(face->style_name); // strdup(family);
     font->face = (void *)face;
     return font;
 }
