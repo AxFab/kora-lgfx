@@ -25,6 +25,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <errno.h>
+#ifdef __linux__
+#include <netinet/in.h>
+#endif
 
 #ifndef SOCKET
 #  define SOCKET int
@@ -113,7 +116,7 @@ static inline int wns_connect(wns_cnx_t *cnx)
 #endif
     cnx->rlen = sizeof(*server);
     cnx->sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (cnx->sock == INVALID_SOCKET) {
+    if (cnx->sock == -1) {
         fprintf(stderr, "Counld not connect to server : %d\n", WNS_ERROR);
         return -1;
     }
@@ -123,7 +126,7 @@ static inline int wns_connect(wns_cnx_t *cnx)
 static inline int wns_send(wns_cnx_t *cnx, wns_msg_t *msg)
 {
     int ret = sendto(cnx->sock, (char *)msg, sizeof(wns_msg_t), 0, &cnx->remote, cnx->rlen);
-    if (ret == SOCKET_ERROR)
+    if (ret == -1)
         fprintf(stderr, "sendto() failed with code  : %d\n", WNS_ERROR);
     return ret;
 }
@@ -133,7 +136,7 @@ static inline int wns_recv(wns_cnx_t *cnx, wns_msg_t *msg)
     unsigned rlen = sizeof(struct sockaddr);
     struct sockaddr raddr;
     int ret = recvfrom(cnx->sock, (char *)msg, sizeof(wns_msg_t), 0, &raddr, &rlen);
-    if (ret == SOCKET_ERROR)
+    if (ret == -1)
         fprintf(stderr, "recvfrom() failed with code  : %d\n", WNS_ERROR);
     return ret;
 }

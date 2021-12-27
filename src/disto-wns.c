@@ -24,6 +24,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
 
 wns_cnx_t __wnscnx;
 int __wnssct = 0;

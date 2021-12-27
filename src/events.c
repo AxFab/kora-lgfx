@@ -85,14 +85,18 @@ int msg_ptr = 0;
 
 int gfx_poll(gfx_msg_t *msg)
 {
-    if (msg_ptr > 0) {
-        msg_ptr--;
-        memcpy(msg, &msg_pool[msg_ptr], sizeof(*msg));
-        return 0;
-    }
+    for (;;) {
+        if (msg_ptr > 0) {
+            msg_ptr--;
+            memcpy(msg, &msg_pool[msg_ptr], sizeof(*msg));
+            return 0;
+        }
 
-    gfx_ctx_t *ctx = gfx_context(NULL);
-    return ctx->poll(msg);
+        gfx_ctx_t *ctx = gfx_context(NULL);
+        int ret = ctx->poll(msg);
+        if (ret == 0)
+            return ret;
+    }
 }
 
 

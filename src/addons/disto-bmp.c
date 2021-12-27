@@ -26,14 +26,16 @@
 #include <threads.h>
 #include <gfx.h>
 #include "../mcrs.h"
+#include "../disto.h"
 
-void clipboard_copy(const char *buf, int len)
+int gfx_clipboard_copy(const char *buf, int len)
 {
     ((void)buf);
     ((void)len);
+    return 0;
 }
 
-int clipboard_paste(char *buf, int len)
+int gfx_clipboard_paste(char *buf, int len)
 {
     ((void)buf);
     ((void)len);
@@ -42,19 +44,6 @@ int clipboard_paste(char *buf, int len)
 
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
-
-const char *pipe_name = NULL;
-
-static void gfx_post(int fd, int no, uint32_t param1, uint32_t param2)
-{
-    gfx_msg_t msg;
-    msg.window = 0;
-    msg.message = no;
-    msg.param1 = param1;
-    msg.param2 = param2;
-    write(fd, &msg, sizeof(msg));
-    printf(" - [%d, %x, %x]\n", no, param1, param2);
-}
 
 uint8_t rev[] = {
     0, 0, 0, 0, 0, 0, 0, 0,
@@ -76,7 +65,26 @@ uint8_t rev[] = {
 
 };
 
-static void gfx_parse_key(int fd, char *buf)
+gfx_msg_t mq_events[8];
+int mq_pointer = 0;
+int mq_reader = 0;
+
+
+static void gfx_post(int message, int param1, int param2)
+{
+    gfx_msg_t *msg = &mq_events[mq_pointer++];
+    msg->message = message;
+    msg->window = 0;
+    msg->param1 = param1;
+    msg->param2 = param2;
+}
+
+static void gfx_read(gfx_msg_t *msg)
+{
+    memcpy(msg, &mq_events[mq_reader++], sizeof(gfx_msg_t));
+}
+
+static void gfx_parse_key(char *buf)
 {
     int lm = buf[1];
     int md = buf[0];
@@ -84,9 +92,9 @@ static void gfx_parse_key(int fd, char *buf)
 
     if (lm == '+') {
         if (md == 'C')
-            gfx_post(fd, GFX_EV_KEYDOWN, 0x1d, 0);
+            gfx_post(GFX_EV_KEYDOWN, 0x1d, 0);
         else if (md == 'S')
-            gfx_post(fd, GFX_EV_KEYDOWN, 0x2a, 0);
+            gfx_post(GFX_EV_KEYDOWN, 0x2a, 0);
         ch = buf[2];
     } else if (lm == '!') {
         if (md == 'e')
@@ -97,109 +105,58 @@ static void gfx_parse_key(int fd, char *buf)
 
     int key = rev[ch];
     if (key != 0) {
-        gfx_post(fd, GFX_EV_KEYDOWN, key, 0);
-        gfx_post(fd, GFX_EV_KEYUP, key, 0);
+        gfx_post(GFX_EV_KEYDOWN, key, 0);
+        gfx_post(GFX_EV_KEYUP, key, 0);
     }
 
     if (lm == '+') {
         if (md == 'C')
-            gfx_post(fd, GFX_EV_KEYUP, 0x1d, 0);
+            gfx_post(GFX_EV_KEYUP, 0x1d, 0);
         else if (md == 'S')
-            gfx_post(fd, GFX_EV_KEYUP, 0x2a, 0);
+            gfx_post(GFX_EV_KEYUP, 0x2a, 0);
     }
 }
 
-static int gfx_read_events(int *fds)
+static void gfx_parse_event(FILE *fp)
 {
-    int cn, idx = 0;
-    char buf[16] = { 0 };
-    for (;;) {
-        int cap = 16;
-        if (idx < cap)
-            cn = read(fds[1], &buf[idx], cap - idx);
-        cap = idx + cn;
-        if (cap == 0)
-            break;
-        char *n = strchr(buf, '\n');
-        if (n == NULL)
-            exit(-5);
-        *n = '\0';
+    char buf[32];
+    int cn = fgets(buf, 32, fp);
 
-        if (strncmp(buf, "KEY ", 4) == 0)
-            gfx_parse_key(fds[0], &buf[4]);
-        else if (strncmp(buf, "QUIT", 4) == 0 || strcmp(buf, "q") == 0)
-            gfx_post(fds[0], GFX_EV_QUIT, 0, 0);
-        else if (strncmp(buf, "TIMER", 5) == 0 || strcmp(buf, "t") == 0)
-            gfx_post(fds[0], GFX_EV_TIMER, 0, 0);
-        else if (strncmp(buf, "DELAY", 5) == 0)
-            gfx_post(fds[0], GFX_EV_DELAY, 500000, 0);
-        idx = (++n) - buf;
-        memmove(buf, n, cap - idx);
-        idx = cap - idx;
-    }
-    close(fds[1]);
-    close(fds[0]);
-    free(fds);
-    thrd_detach(thrd_current());
-    thrd_exit(0);
-    return 0;
+    if (strncmp(buf, "KEY ", 4) == 0)
+        gfx_parse_key(buf);
+    else if (strncmp(buf, "QUIT", 4) == 0 || strcmp(buf, "q") == 0)
+        gfx_post(GFX_EV_QUIT, 0, 0);
+    else if (strncmp(buf, "TIMER", 5) == 0 || strcmp(buf, "t") == 0)
+        gfx_post(GFX_EV_TIMER, 0, 0);
+    else if (strncmp(buf, "DELAY", 5) == 0)
+        gfx_post(GFX_EV_DELAY, 500000, 0);
 }
+
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
 
-
-int gfx_open_window(gfx_t *gfx)
-{
-    int p2[2];
-    int *p3 = malloc(2 * sizeof(int));
-    pipe(p2);
-    p3[0] = p2[1];
-    p3[1] = pipe_name == NULL ? 0 : open(pipe_name, O_RDONLY);
-    gfx->fd = p2[0];
-
-    thrd_t thrd;
-    thrd_create(&thrd, (thrd_start_t)gfx_read_events, p3);
-    return 0;
-}
-
-int gfx_open_device(gfx_t *gfx, const char *path)
-{
-    int p2[2];
-    int *p3 = malloc(2 * sizeof(int));
-    pipe(p2);
-    p3[0] = p2[1];
-    p3[1] = open(path, O_RDONLY);
-    gfx->fd = p2[0];
-
-    thrd_t thrd;
-    thrd_create(&thrd, (thrd_start_t)gfx_read_events, p3);
-    return 0;
-}
-
-int gfx_close_window(gfx_t *gfx)
+int gfx_close_bmp(gfx_t *gfx)
 {
     gfx_unmap(gfx);
     close(gfx->fd);
     return 0;
 }
 
-void gfx_map_window(gfx_t *gfx)
+int gfx_map_bmp(gfx_t *gfx)
 {
-    if (gfx->pixels != NULL)
-        return;
     gfx->pitch = ALIGN_UP(gfx->width * 4, 4);
     gfx->pixels = calloc(gfx->pitch, gfx->height);
+    return 0;
 }
 
-void gfx_unmap_window(gfx_t *gfx)
+int gfx_unmap_bmp(gfx_t *gfx)
 {
-    if (gfx->pixels == NULL)
-        return;
     free(gfx->pixels);
     gfx->pixels = NULL;
+    return 0;
 }
 
-int gfx_flip(gfx_t *gfx)
+int gfx_flip_bmp(gfx_t *gfx)
 {
     if (gfx->pixels == NULL)
         return -1;
@@ -207,17 +164,46 @@ int gfx_flip(gfx_t *gfx)
     return 0;
 }
 
-int gfx_poll(/*gfx_t *gfx, */gfx_msg_t *msg)
+int gfx_open_bmp(gfx_t *gfx)
 {
-    gfx_t *gfx = NULL;
-    for (;;) {
-        int by = read(gfx->fd, msg, sizeof(*msg));
-        if (by != 0)
-            return by == sizeof(*msg) ? 0 : -1;
-    }
+    gfx->fd = 1;
+    gfx->map = gfx_map_bmp;
+    gfx->unmap = gfx_unmap_bmp;
+    gfx->flip = gfx_flip_bmp;
+    gfx->close = gfx_close_bmp;
+    return 0;
 }
 
-int gfx_push(gfx_t *gfx, int type, int param)
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
+
+int gfx_open_device(gfx_t *gfx, const char *path)
 {
     return -1;
 }
+
+/* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= */
+
+int gfx_poll_bmp(gfx_msg_t *msg)
+{
+    if (mq_reader >= mq_pointer && mq_reader != 0) {
+        mq_pointer = 0;
+        mq_reader = 0;
+    }
+    if (mq_pointer == 0)
+        gfx_parse_event(stdin);
+
+    gfx_read(msg);
+    return 0;
+}
+
+int gfx_timer_bmp(int delay, int interval)
+{
+    return 1;
+}
+
+
+gfx_ctx_t gfx_ctx_bmp = {
+    .open = gfx_open_bmp,
+    .poll = gfx_poll_bmp,
+    .timer = gfx_timer_bmp,
+};

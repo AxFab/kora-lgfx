@@ -84,7 +84,7 @@ static inline uint32_t gfx_alpha_blend_(uint32_t low, uint32_t upr)
     if (va == 0)
         return low;
     if (va == 255)
-        return va;
+        return upr;
     int vb = low >> 24;
     if (vb == 0)
         return upr;

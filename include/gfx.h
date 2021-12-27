@@ -199,6 +199,8 @@ struct gfx_placement {
 
 #define GFX_POINT(x,y)   ((x)|((y)<<16))
 #define GFX_POINT_RD(x,y,v)  do { x=(v)&0x7fff; y=((v)>>16)&0x7fff; } while(0)
+#define GFX_POINT_X(v)  ((v) & 0x7fff)
+#define GFX_POINT_Y(v)  (((v) >> 16) & 0x7fff)
 
 /* Surface creation
 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */

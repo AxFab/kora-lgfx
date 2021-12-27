@@ -43,7 +43,7 @@ SRCS_l += $(srcdir)/addons/disto-$(disto).c
 
 CFLAGS_l += $(CFLAGS)
 CFLAGS_l += -I$(topdir)/include
-CFLAGS_l += -fPIC
+CFLAGS_l += -fPIC -D_DISTO_$(disto)
 
 ifneq ($(sysdir),)
 CFLAGS_l += -I$(sysdir)/include

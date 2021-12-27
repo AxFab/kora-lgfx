@@ -24,10 +24,14 @@
 #include "mcrs.h"
 #include "disto.h"
 
-#if defined _WIN32
+#if defined _DISTO_bmp
+gfx_ctx_t* __gfx_ctx = &gfx_ctx_bmp;
+#elif defined _WIN32
 gfx_ctx_t* __gfx_ctx = &gfx_ctx_win32;
 #elif defined __kora__
 gfx_ctx_t* __gfx_ctx = &gfx_ctx_kora;
+#elif defined __linux__
+gfx_ctx_t* __gfx_ctx = &gfx_ctx_x11;
 #else
 gfx_ctx_t* __gfx_ctx = &gfx_ctx_wns;
 #endif
@@ -36,12 +40,18 @@ LIBAPI gfx_ctx_t *gfx_context(const char *name)
 {
     if (name == NULL)
         return __gfx_ctx;
-#ifdef _WIN32
+#if defined _DISTO_bmp
+    if (stricmp(name, "bmp") == 0)
+        __gfx_ctx = &gfx_ctx_bmp;
+#elif defined _WIN32
     if (stricmp(name, "win32") == 0)
         __gfx_ctx = &gfx_ctx_win32;
 #elif defined __kora__
     if (stricmp(name, "kora") == 0)
         __gfx_ctx = &gfx_ctx_kora;
+#elif defined __linux__
+    if (stricmp(name, "x11") == 0)
+        __gfx_ctx = &gfx_ctx_x11;
 #endif
     if (stricmp(name, "wns") == 0)
         __gfx_ctx = &gfx_ctx_wns;

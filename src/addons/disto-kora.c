@@ -150,7 +150,7 @@ int gfx_open_kora(gfx_t *gfx)
 
 int gfx_open_device(gfx_t *gfx, const char *path)
 {
-    gfx->fd = open(path, O_WRONLY | O_DIRECT);
+    gfx->fd = open(path, O_WRONLY);
     if (gfx->fd == -1)
         return -1;
     // READ SIZE
@@ -171,7 +171,7 @@ LIBAPI int gfx_open_input(const char* path, int uid)
 {
     gfx_context("kora");
     if (input_fd == 0) {
-        input_fd = open(path, O_RDONLY | O_DIRECT);
+        input_fd = open(path, O_RDONLY);
         input_uid = uid;
     }
     return 0;
@@ -202,6 +202,8 @@ int gfx_poll_kora(gfx_msg_t *msg)
 
 int gfx_timer_kora(int delay, int interval)
 {
+    // int setitimer(ITIMER_REAL, const struct itimerval *new_value,
+    //           struct itimerval *old_value);
     return 0;
 }
 

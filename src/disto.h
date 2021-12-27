@@ -22,6 +22,7 @@
 
 #include "gfx.h"
 
+extern gfx_ctx_t gfx_ctx_bmp;
 extern gfx_ctx_t gfx_ctx_win32;
 extern gfx_ctx_t gfx_ctx_x11;
 extern gfx_ctx_t gfx_ctx_kora;
