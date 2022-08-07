@@ -138,47 +138,6 @@ LIBAPI void _gfx_list_fonts_win32()
     closedir(dir);
 }
 
-int _gfx_search_fonts_win32(const char *family, const char *style, char *buf)
-{
-    FT_Error fterror;
-    struct dirent de;
-    struct dirent *p;
-    DIR *dir = opendir(system_dir);
-    for (;;) {
-        readdir_r(dir, &de, &p);
-        if (p == NULL)
-            break;
-
-        FT_Face face;
-        if (strcmp(de.d_name, ".") == 0 || strcmp(de.d_name, "..") == 0)
-            continue;
-        snprintf(buf, BUFSIZ, "%s/%s", system_dir, de.d_name);
-        fterror = FT_New_Face(library, buf, 0, &face);
-        if (fterror != 0)
-            continue;
-        // printf("- %s : %s (%s)\n", de.d_name, face->family_name, face->style_name);
-        if (strcmp(face->family_name, family) == 0 && strcmp(face->style_name, style) == 0) {
-            FT_Done_Face(face);
-            return 0;
-        }
-        int num = 0; // face->num_faces;
-        FT_Done_Face(face);
-        for (int i = 1; i < num; ++i) {
-            fterror = FT_New_Face(library, buf, i, &face);
-            if (fterror != 0)
-                continue;
-            // printf("- %s : %s (%s)\n", de.d_name, face->family_name, face->style_name);
-            if (strcmp(face->family_name, family) == 0 && strcmp(face->style_name, style) == 0) {
-                FT_Done_Face(face);
-                return num;
-            }
-            FT_Done_Face(face);
-        }
-    }
-    closedir(dir);
-    return -1;
-}
-
 const char *style_name[] = {
     "Regular",
     "Italic",
@@ -201,6 +160,64 @@ const char *style_name[] = {
     "Solid",
 };
 
+LIBAPI FT_Library gfx_ft_libary()
+{
+    FT_Error fterror;
+    if (!__freetype_initialized) {
+        fterror = FT_Init_FreeType(&library);
+        __freetype_initialized = true;
+    }
+    return library;
+}
+
+LIBAPI int gfx_ft_search_font(const char *family, int style, char *buf, size_t len)
+{
+    FT_Error fterror;
+    if (!__freetype_initialized) {
+        fterror = FT_Init_FreeType(&library);
+        __freetype_initialized = true;
+    }
+
+    const char *stylename = style_name[style];
+    struct dirent de;
+    struct dirent *p;
+    DIR *dir = opendir(system_dir);
+    for (;;) {
+        readdir_r(dir, &de, &p);
+        if (p == NULL)
+            break;
+
+        FT_Face face;
+        if (strcmp(de.d_name, ".") == 0 || strcmp(de.d_name, "..") == 0)
+            continue;
+        snprintf(buf, len, "%s/%s", system_dir, de.d_name);
+        fterror = FT_New_Face(library, buf, 0, &face);
+        if (fterror != 0)
+            continue;
+        // printf("- %s : %s (%s)\n", de.d_name, face->family_name, face->style_name);
+        if (stricmp(face->family_name, family) == 0 && stricmp(face->style_name, stylename) == 0) {
+            FT_Done_Face(face);
+            return 0;
+        }
+        int num = 0; // face->num_faces;
+        FT_Done_Face(face);
+        for (int i = 1; i < num; ++i) {
+            fterror = FT_New_Face(library, buf, i, &face);
+            if (fterror != 0)
+                continue;
+            // printf("- %s : %s (%s)\n", de.d_name, face->family_name, face->style_name);
+            if (strcmp(face->family_name, family) == 0 && strcmp(face->style_name, stylename) == 0) {
+                FT_Done_Face(face);
+                return num;
+            }
+            FT_Done_Face(face);
+        }
+    }
+    closedir(dir);
+    return -1;
+}
+
+
 gfx_font_t *gfx_load_freetype(const char *family, float size, int style)
 {
 
@@ -214,7 +231,7 @@ gfx_font_t *gfx_load_freetype(const char *family, float size, int style)
     if (style >= GFXFT_END)
         style = GFXFT_REGULAR;
 
-    int num = _gfx_search_fonts_win32(family, style_name[style], buf);
+    int num = gfx_ft_search_font(family, style, buf, BUFSIZ);
     if (num >= 0) {
         fterror = FT_New_Face(library, buf, num, &face);
         if (fterror != 0)
@@ -226,6 +243,10 @@ gfx_font_t *gfx_load_freetype(const char *family, float size, int style)
         if (fterror != 0)
             return NULL;
     }
+
+    fterror = FT_Set_Char_Size(face, 0, size * 64, 96, 96);
+    if (fterror != 0)
+        return NULL;
 
     gfx_font_t *font = malloc(sizeof(gfx_font_t));
     font->mode = GFX_FT_FREETYPE;

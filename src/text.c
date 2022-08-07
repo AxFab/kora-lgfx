@@ -171,7 +171,7 @@ LIBAPI void gfx_clear_font(gfx_font_t *font)
 #endif
 }
 
-LIBAPI int gfx_mesure_text(const gfx_font_t *font, const char *text, gfx_text_metrics_t *metrics)
+LIBAPI int gfx_measure_text(const gfx_font_t *font, const char *text, gfx_text_metrics_t *metrics)
 {
     if (font->mode == GFX_FT_BITFONT)
         return gfx_mesure_bitfont(font->face, text, metrics);

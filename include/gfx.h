@@ -255,7 +255,7 @@ LIBAPI int gfx_glyph(gfx_t *gfx, const gfx_font_t *font, uint32_t unicode, uint3
 LIBAPI int gfx_write(gfx_t *gfx, const gfx_font_t *font, const char *text, uint32_t fg, int x, int y, const gfx_clip_t *clip);
 LIBAPI gfx_font_t *gfx_font(const char *family, float size, int style);
 LIBAPI void gfx_clear_font(gfx_font_t *font);
-LIBAPI int gfx_mesure_text(const gfx_font_t *font, const char *text, gfx_text_metrics_t *metrics);
+LIBAPI int gfx_measure_text(const gfx_font_t *font, const char *text, gfx_text_metrics_t *metrics);
 
 
 /* Helpers
@@ -275,5 +275,11 @@ LIBAPI int gfx_clipboard_paste(char *buf, int len);
 #define gfx_clip_srink(rc,s) do { (rc)->left+=(s); (rc)->top+=(s); (rc)->right-=(s); (rc)->bottom-=(s); } while(0)
 #define gfx_clip_dilate(rc,s) do { (rc)->left-=(s); (rc)->top-=(s); (rc)->right+=(s); (rc)->bottom+=(s); } while(0)
 #define gfx_clip_move(rc,x,y) do { (rc)->left+=(x); (rc)->top+=(y); (rc)->right+=(x); (rc)->bottom+=(y); } while(0)
+
+
+
+// Extra
+// LIBAPI FT_Library gfx_ft_libary();
+LIBAPI int gfx_ft_search_font(const char *family, int style, char *buf, size_t len);
 
 #endif  /* _GFX_H */
